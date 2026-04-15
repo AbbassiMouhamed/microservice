@@ -19,18 +19,28 @@ cd C:\Users\abbas\Desktop\microservice
 docker compose up --build
 ```
 
-Open the UI: http://localhost
+Open the UI: http://localhost (you’ll be redirected to Keycloak login)
+
+Demo users:
+
+- admin / admin
+- teacher / teacher
+- student / student
+
+Keycloak admin console: http://localhost:8180/admin (admin / admin)
 
 ## Local dev (Windows)
 
 Recommended: keep **MySQL in Docker**, run Spring + Angular locally.
 
-### 1) Start MySQL
+### 1) Start MySQL + Keycloak
 
 ```powershell
 cd C:\Users\abbas\Desktop\microservice
-docker compose up -d mysql
+docker compose up -d mysql keycloak
 ```
+
+Keycloak: http://localhost:8180
 
 ### 2) Start Eureka
 
@@ -47,11 +57,11 @@ $env:SPRING_PROFILES_ACTIVE = "local"
 mvn -pl exam-cert-service -DskipTests spring-boot:run
 ```
 
-### 4) Start api-gateway
+### 4) Start api-gateway (uses local profile)
 
 ```powershell
 cd backend
-$env:EUREKA_URL = "http://localhost:8761/eureka"
+$env:SPRING_PROFILES_ACTIVE = "local"
 $env:SERVER_PORT = "8080"
 mvn -pl api-gateway -DskipTests spring-boot:run
 ```

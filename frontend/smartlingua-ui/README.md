@@ -10,7 +10,15 @@ npm install
 npm start
 ```
 
-Open: http://localhost:4200
+Open: http://localhost:4200 (will redirect to Keycloak login)
+
+Keycloak: http://localhost:8180
+
+Demo users:
+
+- admin / admin
+- teacher / teacher
+- student / student
 
 ## API proxy
 

@@ -16,6 +16,17 @@ services:
     volumes:
       - mysql-data-8-0:/var/lib/mysql
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1.2
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8180:8080"
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import
+
   discovery-server:
     build:
       context: .
@@ -31,10 +42,15 @@ services:
       EUREKA_URL: http://discovery-server:8761/eureka
       SERVER_PORT: 8080
       CORS_ALLOWED_ORIGINS: http://localhost
+      # Tokens are issued with issuer=http://localhost:8180/... because the browser logs in via the host port.
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/smartlingua
+      # But containers must fetch JWKS from the internal Keycloak service name.
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/smartlingua/protocol/openid-connect/certs
     ports:
       - "8080:8080"
     depends_on:
       - discovery-server
+      - keycloak
 
   exam-cert-service:
     build:
@@ -47,12 +63,16 @@ services:
       DB_USERNAME: smartlingua
       DB_PASSWORD: smartlingua
       SIGNING_KEYS_DIR: /data/keys
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/smartlingua
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/smartlingua/protocol/openid-connect/certs
     ports:
       - "8081:8081"
     depends_on:
       mysql:
         condition: service_healthy
       discovery-server:
+        condition: service_started
+      keycloak:
         condition: service_started
     volumes:
       - signing-keys:/data/keys

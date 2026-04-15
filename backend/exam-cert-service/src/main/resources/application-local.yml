@@ -2,6 +2,11 @@
 # Activate via: SPRING_PROFILES_ACTIVE=local (or -Dspring-boot.run.profiles=local)
 
 spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/smartlingua}
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/smartlingua?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
 

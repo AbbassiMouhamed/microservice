@@ -1,0 +1,64 @@
+{
+  "realm": "smartlingua",
+  "enabled": true,
+  "displayName": "SmartLingua",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "rememberMe": true,
+  "resetPasswordAllowed": true,
+  "roles": {
+    "realm": [{ "name": "ADMIN" }, { "name": "TEACHER" }, { "name": "STUDENT" }]
+  },
+  "clients": [
+    {
+      "clientId": "smartlingua-ui",
+      "name": "SmartLingua UI",
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost/*", "http://localhost:4200/*"],
+      "webOrigins": ["http://localhost", "http://localhost:4200"]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "admin@smartlingua.local",
+      "firstName": "Admin",
+      "lastName": "User",
+      "credentials": [
+        { "type": "password", "value": "admin", "temporary": false }
+      ],
+      "realmRoles": ["ADMIN"]
+    },
+    {
+      "username": "teacher",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "teacher@smartlingua.local",
+      "firstName": "Teacher",
+      "lastName": "User",
+      "credentials": [
+        { "type": "password", "value": "teacher", "temporary": false }
+      ],
+      "realmRoles": ["TEACHER"]
+    },
+    {
+      "username": "student",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "student@smartlingua.local",
+      "firstName": "Student",
+      "lastName": "User",
+      "credentials": [
+        { "type": "password", "value": "student", "temporary": false }
+      ],
+      "realmRoles": ["STUDENT"]
+    }
+  ]
+}
