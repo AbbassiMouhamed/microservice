@@ -13,6 +13,12 @@
     <mat-toolbar color="primary">
       <span>Exam &amp; Certification Management</span>
       <span class="spacer"></span>
+
+      <span *ngIf="auth.isAuthenticated" style="margin-right: 8px">
+        {{ auth.username }}
+      </span>
+      <button *ngIf="auth.isAuthenticated" mat-button (click)="auth.logout()">Logout</button>
+
       <a mat-button href="/api/swagger-ui" target="_blank" rel="noopener">API Docs</a>
     </mat-toolbar>
 

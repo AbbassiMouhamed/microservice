@@ -4,6 +4,11 @@ server:
 spring:
   application:
     name: exam-cert-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/smartlingua}
   datasource:
     url: ${DB_URL:jdbc:mysql://mysql:3306/smartlingua?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
     username: ${DB_USERNAME:smartlingua}

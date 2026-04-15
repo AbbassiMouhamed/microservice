@@ -1,0 +1,14 @@
+# Local dev overrides
+# Activate via: SPRING_PROFILES_ACTIVE=local
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/smartlingua}
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
