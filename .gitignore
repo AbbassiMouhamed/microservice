@@ -1,0 +1,29 @@
+# Python
+.venv/
+
+# Java / Maven / Gradle
+**/target/
+
+# Node / Angular
+**/node_modules/
+**/dist/
+**/.angular/
+**/.cache/
+
+# Local dev data / generated artifacts
+.local/
+data/
+artifacts/
+certificate*.pdf
+*.extracted.txt
+
+# Env files (avoid committing secrets)
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/

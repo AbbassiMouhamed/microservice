@@ -1,0 +1,16 @@
+# Local dev overrides (MySQL on host, Eureka on host)
+# Activate via: SPRING_PROFILES_ACTIVE=local (or -Dspring-boot.run.profiles=local)
+
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/smartlingua?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+
+app:
+  signing:
+    # When started via Maven, the working directory is typically backend/exam-cert-service
+    keysDir: ${SIGNING_KEYS_DIR:../../data/keys}
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}

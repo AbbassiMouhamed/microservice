@@ -1,0 +1,9 @@
+**/.git
+**/.vscode
+**/target
+**/node_modules
+**/dist
+**/.angular
+**/.venv
+artifacts
+SmartLingua_PI.*

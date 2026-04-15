@@ -1,0 +1,71 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: smartlingua
+      MYSQL_USER: smartlingua
+      MYSQL_PASSWORD: smartlingua
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - mysql-data-8-0:/var/lib/mysql
+
+  discovery-server:
+    build:
+      context: .
+      dockerfile: backend/discovery-server/Dockerfile
+    ports:
+      - "8761:8761"
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: backend/api-gateway/Dockerfile
+    environment:
+      EUREKA_URL: http://discovery-server:8761/eureka
+      SERVER_PORT: 8080
+      CORS_ALLOWED_ORIGINS: http://localhost
+    ports:
+      - "8080:8080"
+    depends_on:
+      - discovery-server
+
+  exam-cert-service:
+    build:
+      context: .
+      dockerfile: backend/exam-cert-service/Dockerfile
+    environment:
+      EUREKA_URL: http://discovery-server:8761/eureka
+      SERVER_PORT: 8081
+      DB_URL: jdbc:mysql://mysql:3306/smartlingua?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USERNAME: smartlingua
+      DB_PASSWORD: smartlingua
+      SIGNING_KEYS_DIR: /data/keys
+    ports:
+      - "8081:8081"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+    volumes:
+      - signing-keys:/data/keys
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/smartlingua-ui/Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - api-gateway
+
+volumes:
+  mysql-data-8-0:
+  signing-keys:

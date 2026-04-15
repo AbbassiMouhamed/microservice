@@ -1,0 +1,42 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: exam-cert-service
+          uri: lb://exam-cert-service
+          predicates:
+            - Path=/api/**
+      default-filters:
+        - RemoveRequestHeader=Cookie
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+# Local-dev CORS so Angular can call the gateway directly if needed
+spring.cloud.gateway.globalcors:
+  cors-configurations:
+    "[/**]":
+      allowedOrigins: "${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost}"
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      allowedHeaders: "*"
+      allowCredentials: true
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URL:http://discovery-server:8761/eureka}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
