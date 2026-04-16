@@ -85,6 +85,10 @@ export class ApiClient {
     return this.http.post<ExamAttempt>(`${this.baseUrl}/exams/${examId}/attempts`, input);
   }
 
+  submitMyAttempt(examId: UUID, input: { score: number }): Observable<ExamAttempt> {
+    return this.http.post<ExamAttempt>(`${this.baseUrl}/exams/${examId}/attempts/me`, input);
+  }
+
   getAttempt(attemptId: UUID): Observable<ExamAttempt> {
     return this.http.get<ExamAttempt>(`${this.baseUrl}/attempts/${attemptId}`);
   }
@@ -92,6 +96,10 @@ export class ApiClient {
   // Certificates
   listCertificates(): Observable<Certificate[]> {
     return this.http.get<Certificate[]>(`${this.baseUrl}/certificates`);
+  }
+
+  listMyCertificates(): Observable<Certificate[]> {
+    return this.http.get<Certificate[]>(`${this.baseUrl}/certificates/me`);
   }
 
   issueCertificate(examAttemptId: UUID): Observable<Certificate> {
@@ -106,7 +114,15 @@ export class ApiClient {
     return this.http.get<VerifyResult>(`${this.baseUrl}/certificates/${id}/verify`);
   }
 
+  verifyMyCertificate(id: UUID): Observable<VerifyResult> {
+    return this.http.get<VerifyResult>(`${this.baseUrl}/certificates/me/${id}/verify`);
+  }
+
   getCertificateDownloadUrl(id: UUID): string {
     return `${this.baseUrl}/certificates/${id}/download`;
+  }
+
+  getMyCertificateDownloadUrl(id: UUID): string {
+    return `${this.baseUrl}/certificates/me/${id}/download`;
   }
 }

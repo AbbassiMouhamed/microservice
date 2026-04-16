@@ -9,6 +9,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { ApiClient } from '../../api/api-client.service';
 import { Exam } from '../../api/api.models';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
   standalone: true,
@@ -33,7 +34,7 @@ import { Exam } from '../../api/api.models';
       <mat-card-title class="title-row">
         <span>Final exams</span>
         <span class="spacer"></span>
-        <a mat-raised-button color="primary" routerLink="/exams/new">
+        <a *ngIf="auth.isTeacherOrAdmin" mat-raised-button color="primary" routerLink="/exams/new">
           <mat-icon>add</mat-icon>
           Create exam
         </a>
@@ -106,6 +107,8 @@ import { Exam } from '../../api/api.models';
   ],
 })
 export class ExamsPage {
+  readonly auth = inject(AuthService);
+
   private readonly api = inject(ApiClient);
   private readonly snack = inject(MatSnackBar);
   private readonly datePipe = inject(DatePipe);

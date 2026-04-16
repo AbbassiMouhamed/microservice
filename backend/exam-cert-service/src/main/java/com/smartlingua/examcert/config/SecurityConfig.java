@@ -45,12 +45,20 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui", "/swagger-ui/**").permitAll()
                         .requestMatchers("/api-docs", "/api-docs/**").permitAll()
 
-                        // write operations
-                        .requestMatchers(HttpMethod.POST, "/api/users").hasRole("ADMIN")
+                        // student self-service
+                        .requestMatchers(HttpMethod.POST, "/api/exams/*/attempts/me").hasRole("STUDENT")
+                        .requestMatchers("/api/certificates/me", "/api/certificates/me/**").hasRole("STUDENT")
+
+                        // admin-only
+                        .requestMatchers("/api/users/**").hasRole("ADMIN")
+
+                        // teacher/admin
                         .requestMatchers(HttpMethod.POST, "/api/courses").hasAnyRole("TEACHER", "ADMIN")
+                        .requestMatchers("/api/attempts/**").hasAnyRole("TEACHER", "ADMIN")
+                        .requestMatchers("/api/exams/*/attempts").hasAnyRole("TEACHER", "ADMIN")
+                        .requestMatchers("/api/certificates/**").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/exams").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/exams/**").hasAnyRole("TEACHER", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/certificates/issue").hasAnyRole("TEACHER", "ADMIN")
 
                         // everything else requires login
                         .anyRequest().authenticated()

@@ -3,12 +3,15 @@ package com.smartlingua.examcert.web;
 import com.smartlingua.examcert.domain.CertificateEntity;
 import com.smartlingua.examcert.domain.SkillLevel;
 import com.smartlingua.examcert.service.CertificateService;
+import com.smartlingua.examcert.service.NotFoundException;
+import com.smartlingua.examcert.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,14 +28,22 @@ import java.util.UUID;
 public class CertificateController {
 
     private final CertificateService certificateService;
+    private final UserService userService;
 
-    public CertificateController(CertificateService certificateService) {
+    public CertificateController(CertificateService certificateService, UserService userService) {
         this.certificateService = certificateService;
+        this.userService = userService;
     }
 
     @GetMapping
     public List<CertificateResponse> list() {
         return certificateService.listCertificates().stream().map(CertificateResponse::from).toList();
+    }
+
+    @GetMapping("/me")
+    public List<CertificateResponse> listMine(JwtAuthenticationToken auth) {
+        var student = resolveStudent(auth);
+        return certificateService.listCertificatesForStudent(student.getId()).stream().map(CertificateResponse::from).toList();
     }
 
     @GetMapping("/{id}")
@@ -50,9 +61,42 @@ public class CertificateController {
         return certificateService.verify(id);
     }
 
+    @GetMapping("/me/{id}/verify")
+    public CertificateService.VerifyResult verifyMine(@PathVariable("id") UUID id, JwtAuthenticationToken auth) {
+        requireOwnedCertificate(id, auth);
+        return certificateService.verify(id);
+    }
+
     @GetMapping("/{id}/download")
     public ResponseEntity<byte[]> download(@PathVariable("id") UUID id) {
         CertificateEntity cert = certificateService.getCertificate(id);
+        return toPdfResponse(cert);
+    }
+
+    @GetMapping("/me/{id}/download")
+    public ResponseEntity<byte[]> downloadMine(@PathVariable("id") UUID id, JwtAuthenticationToken auth) {
+        CertificateEntity cert = requireOwnedCertificate(id, auth);
+        return toPdfResponse(cert);
+    }
+
+    private com.smartlingua.examcert.domain.UserEntity resolveStudent(JwtAuthenticationToken auth) {
+        String email = auth.getToken().getClaimAsString("email");
+        String username = auth.getToken().getClaimAsString("preferred_username");
+        return userService.getOrCreateStudent(username, email);
+    }
+
+    private CertificateEntity requireOwnedCertificate(UUID certificateId, JwtAuthenticationToken auth) {
+        var student = resolveStudent(auth);
+        CertificateEntity cert = certificateService.getCertificate(certificateId);
+
+        if (!cert.getStudent().getId().equals(student.getId())) {
+            throw new NotFoundException("Certificate not found");
+        }
+
+        return cert;
+    }
+
+    private ResponseEntity<byte[]> toPdfResponse(CertificateEntity cert) {
         String filename = "certificate-" + cert.getId() + ".pdf";
 
         HttpHeaders headers = new HttpHeaders();

@@ -12,6 +12,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { ApiClient } from '../../api/api-client.service';
 import { Course, Exam, ExamAttempt, User, UUID } from '../../api/api.models';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
   standalone: true,
@@ -32,7 +33,9 @@ import { Course, Exam, ExamAttempt, User, UUID } from '../../api/api.models';
   template: `
     <div class="page-header">
       <div class="page-title">Exam details</div>
-      <div class="page-subtitle">Intended users: Teacher (static user mode)</div>
+      <div class="page-subtitle">
+        {{ auth.isTeacherOrAdmin ? 'Teacher / Admin' : 'Student' }}
+      </div>
     </div>
 
     <div class="top-actions">
@@ -73,6 +76,7 @@ import { Course, Exam, ExamAttempt, User, UUID } from '../../api/api.models';
         <div class="actions">
           <button mat-stroked-button type="button" (click)="refresh()">Refresh</button>
           <button
+            *ngIf="auth.isTeacherOrAdmin"
             mat-raised-button
             color="primary"
             type="button"
@@ -82,6 +86,7 @@ import { Course, Exam, ExamAttempt, User, UUID } from '../../api/api.models';
             Publish
           </button>
           <button
+            *ngIf="auth.isTeacherOrAdmin"
             mat-raised-button
             color="warn"
             type="button"
@@ -95,7 +100,7 @@ import { Course, Exam, ExamAttempt, User, UUID } from '../../api/api.models';
     </mat-card>
 
     <div class="grid">
-      <mat-card>
+      <mat-card *ngIf="auth.isTeacherOrAdmin">
         <mat-card-title>Attempts</mat-card-title>
         <mat-card-content>
           <table mat-table [dataSource]="attempts()" class="table">
@@ -149,8 +154,8 @@ import { Course, Exam, ExamAttempt, User, UUID } from '../../api/api.models';
         </mat-card-content>
       </mat-card>
 
-      <mat-card>
-        <mat-card-title>Submit attempt</mat-card-title>
+      <mat-card *ngIf="auth.isTeacherOrAdmin; else studentAttempt">
+        <mat-card-title>Submit attempt (for a student)</mat-card-title>
         <mat-card-content>
           <p class="hint">Exam must be <strong>PUBLISHED</strong> to accept attempts.</p>
 
@@ -200,11 +205,52 @@ import { Course, Exam, ExamAttempt, User, UUID } from '../../api/api.models';
 
           <mat-card *ngIf="students().length === 0" class="warn">
             <mat-card-content>
-              No students yet. Create one in the Students section first.
+              No students found. Ask an admin to create students.
             </mat-card-content>
           </mat-card>
         </mat-card-content>
       </mat-card>
+
+      <ng-template #studentAttempt>
+        <mat-card>
+          <mat-card-title>Submit my attempt</mat-card-title>
+          <mat-card-content>
+            <p class="hint">Exam must be <strong>PUBLISHED</strong> to accept attempts.</p>
+
+            <mat-card *ngIf="!canSubmitAttempts()" class="warn">
+              <mat-card-content>
+                Attempts are disabled because this exam is not published.
+              </mat-card-content>
+            </mat-card>
+
+            <form [formGroup]="myForm" (ngSubmit)="submitMyAttempt()" class="form">
+              <mat-form-field appearance="outline">
+                <mat-label>Score</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  formControlName="score"
+                  [disabled]="!canSubmitAttempts()"
+                />
+                <mat-hint>Allowed range: 0 – {{ exam()?.maxScore ?? '—' }}</mat-hint>
+              </mat-form-field>
+
+              <button
+                mat-raised-button
+                color="primary"
+                type="submit"
+                [disabled]="!canSubmitAttempts() || myForm.invalid || loading()"
+              >
+                Submit
+              </button>
+            </form>
+
+            <p class="hint" style="margin-top: 12px">
+              After you pass, a teacher/admin can issue your certificate.
+            </p>
+          </mat-card-content>
+        </mat-card>
+      </ng-template>
     </div>
   `,
   styles: [
@@ -292,6 +338,8 @@ import { Course, Exam, ExamAttempt, User, UUID } from '../../api/api.models';
   ],
 })
 export class ExamDetailPage {
+  readonly auth = inject(AuthService);
+
   private readonly api = inject(ApiClient);
   private readonly fb = inject(FormBuilder);
   private readonly snack = inject(MatSnackBar);
@@ -339,6 +387,10 @@ export class ExamDetailPage {
     score: [0, [Validators.required, Validators.min(0)]],
   });
 
+  readonly myForm = this.fb.group({
+    score: [0, [Validators.required, Validators.min(0)]],
+  });
+
   constructor() {
     this.refresh();
   }
@@ -382,21 +434,26 @@ export class ExamDetailPage {
           ),
       });
 
-    this.api
-      .listExamAttempts(id)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (data) => this.attempts.set(data),
-        error: () => this.snack.open('Failed to load attempts', 'Dismiss', { duration: 4000 }),
-      });
+    if (this.auth.isTeacherOrAdmin) {
+      this.api
+        .listExamAttempts(id)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (data) => this.attempts.set(data),
+          error: () => this.snack.open('Failed to load attempts', 'Dismiss', { duration: 4000 }),
+        });
 
-    this.api
-      .listUsers('STUDENT')
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (data) => this.students.set(data),
-        error: () => this.snack.open('Failed to load students', 'Dismiss', { duration: 4000 }),
-      });
+      this.api
+        .listUsers('STUDENT')
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (data) => this.students.set(data),
+          error: () => this.snack.open('Failed to load students', 'Dismiss', { duration: 4000 }),
+        });
+    } else {
+      this.attempts.set([]);
+      this.students.set([]);
+    }
   }
 
   publish(): void {
@@ -481,6 +538,40 @@ export class ExamDetailPage {
       });
   }
 
+  submitMyAttempt(): void {
+    const e = this.exam();
+    if (!e) return;
+    if (e.status !== 'PUBLISHED') {
+      this.snack.open('Exam must be PUBLISHED to accept attempts', 'Dismiss', { duration: 4000 });
+      return;
+    }
+    if (this.myForm.invalid) return;
+
+    this.loading.set(true);
+    const v = this.myForm.getRawValue();
+
+    this.api
+      .submitMyAttempt(e.id, {
+        score: Number(v.score),
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.loading.set(false);
+          this.myForm.reset({ score: 0 });
+          this.snack.open('Attempt submitted', 'Dismiss', { duration: 2500 });
+        },
+        error: (err) => {
+          this.loading.set(false);
+          this.snack.open(
+            err?.error?.detail ?? err?.error?.message ?? 'Failed to submit attempt',
+            'Dismiss',
+            { duration: 5000 },
+          );
+        },
+      });
+  }
+
   issue(attemptId: UUID): void {
     this.api
       .issueCertificate(attemptId)
@@ -501,8 +592,12 @@ export class ExamDetailPage {
   }
 
   private applyScoreValidators(maxScore: number): void {
-    const scoreControl = this.form.controls.score;
-    scoreControl.setValidators([Validators.required, Validators.min(0), Validators.max(maxScore)]);
-    scoreControl.updateValueAndValidity({ emitEvent: false });
+    const validators = [Validators.required, Validators.min(0), Validators.max(maxScore)];
+
+    this.form.controls.score.setValidators(validators);
+    this.form.controls.score.updateValueAndValidity({ emitEvent: false });
+
+    this.myForm.controls.score.setValidators(validators);
+    this.myForm.controls.score.updateValueAndValidity({ emitEvent: false });
   }
 }
