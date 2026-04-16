@@ -107,10 +107,16 @@ public class CertificateService {
         return certificateRepository.save(cert);
     }
 
+    @Transactional
     public VerifyResult verify(UUID certificateId) {
         CertificateEntity cert = getCertificate(certificateId);
         var publicKey = PemKeyUtils.parsePublicKeyPem(cert.getPublicKeyPem());
         boolean valid = signatureService.verify(cert.getPayloadJson(), cert.getSignatureBase64(), publicKey);
+
+        cert.setLastVerifiedAt(OffsetDateTime.now(ZoneOffset.UTC));
+        cert.setLastVerifiedValid(valid);
+        certificateRepository.save(cert);
+
         return new VerifyResult(valid);
     }
 

@@ -138,6 +138,16 @@ export class ApiClient {
     return this.http.get<VerifyResult>(`${this.baseUrl}/certificates/me/${id}/verify`);
   }
 
+  downloadCertificatePdf(id: UUID): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/certificates/${id}/download`, { responseType: 'blob' });
+  }
+
+  downloadMyCertificatePdf(id: UUID): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/certificates/me/${id}/download`, {
+      responseType: 'blob',
+    });
+  }
+
   getCertificateDownloadUrl(id: UUID): string {
     return `${this.baseUrl}/certificates/${id}/download`;
   }

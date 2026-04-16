@@ -77,8 +77,16 @@ public class CertificateController {
     }
 
     @GetMapping("/{id}/download")
-    public ResponseEntity<byte[]> download(@PathVariable("id") UUID id) {
+    public ResponseEntity<byte[]> download(@PathVariable("id") UUID id, JwtAuthenticationToken auth) {
         CertificateEntity cert = certificateService.getCertificate(id);
+
+        if (isStudentOnly(auth)) {
+            var student = resolveStudent(auth);
+            if (!cert.getStudent().getId().equals(student.getId())) {
+                throw new NotFoundException("Certificate not found");
+            }
+        }
+
         return toPdfResponse(cert);
     }
 
@@ -92,6 +100,16 @@ public class CertificateController {
         String email = auth.getToken().getClaimAsString("email");
         String username = auth.getToken().getClaimAsString("preferred_username");
         return userService.getOrCreateStudent(username, email);
+    }
+
+    private boolean isStudentOnly(JwtAuthenticationToken auth) {
+        if (auth == null) return false;
+
+        boolean isStudent = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_STUDENT"));
+        boolean isTeacher = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_TEACHER"));
+        boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        return isStudent && !isTeacher && !isAdmin;
     }
 
     private CertificateEntity requireOwnedCertificate(UUID certificateId, JwtAuthenticationToken auth) {
@@ -126,6 +144,8 @@ public class CertificateController {
             String studentEmail,
             String examTitle,
             OffsetDateTime issuedAt,
+            OffsetDateTime lastVerifiedAt,
+            Boolean lastVerifiedValid,
             SkillLevel skillLevel,
             String signatureBase64
     ) {
@@ -138,6 +158,8 @@ public class CertificateController {
                     c.getStudent().getEmail(),
                     c.getExamAttempt().getExam().getTitle(),
                     c.getIssuedAt(),
+                    c.getLastVerifiedAt(),
+                    c.getLastVerifiedValid(),
                     c.getSkillLevel(),
                     c.getSignatureBase64()
             );

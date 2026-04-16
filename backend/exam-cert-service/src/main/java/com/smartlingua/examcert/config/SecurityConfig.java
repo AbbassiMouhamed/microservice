@@ -47,7 +47,11 @@ public class SecurityConfig {
 
                         // student self-service
                         .requestMatchers(HttpMethod.POST, "/api/exams/*/attempts/me").hasRole("STUDENT")
-                        .requestMatchers("/api/certificates/me", "/api/certificates/me/**").hasRole("STUDENT")
+                        .requestMatchers(HttpMethod.GET, "/api/certificates/me").hasRole("STUDENT")
+                        .requestMatchers(HttpMethod.GET, "/api/certificates/me/*/download").hasRole("STUDENT")
+
+                        // students must NOT verify; staff can use the non-/me verify endpoint
+                        .requestMatchers(HttpMethod.GET, "/api/certificates/me/*/verify").hasAnyRole("TEACHER", "ADMIN")
 
                         // admin-only
                         .requestMatchers(HttpMethod.POST, "/api/users").hasRole("ADMIN")
@@ -62,6 +66,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/attempts/**").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers("/api/exams/*/attempts").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/exams/**").hasAnyRole("TEACHER", "ADMIN")
+
+                        // certificate downloads should work for any logged-in user
+                        .requestMatchers(HttpMethod.GET, "/api/certificates/*/download").hasAnyRole("STUDENT", "TEACHER", "ADMIN")
+
                         .requestMatchers("/api/certificates/**").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/exams").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/exams/**").hasAnyRole("TEACHER", "ADMIN")

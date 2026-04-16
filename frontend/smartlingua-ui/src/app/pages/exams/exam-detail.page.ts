@@ -101,7 +101,11 @@ import { AuthService } from '../../auth/auth.service';
 
     <div class="grid">
       <mat-card *ngIf="auth.isTeacherOrAdmin">
-        <mat-card-title>Attempts</mat-card-title>
+        <mat-card-title class="title-row">
+          <span>Attempts</span>
+          <span class="spacer"></span>
+          <a mat-stroked-button [routerLink]="['/certificates']">Certificates</a>
+        </mat-card-title>
         <mat-card-content>
           <table mat-table [dataSource]="attempts()" class="table">
             <ng-container matColumnDef="student">
@@ -134,7 +138,6 @@ import { AuthService } from '../../auth/auth.service';
             <ng-container matColumnDef="actions">
               <th mat-header-cell *matHeaderCellDef></th>
               <td mat-cell *matCellDef="let a" class="row-actions">
-                <a mat-button [routerLink]="['/certificates']" *ngIf="a.passed">Certificates</a>
                 <button
                   mat-raised-button
                   color="primary"

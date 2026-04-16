@@ -47,6 +47,8 @@ export interface Certificate {
   studentEmail?: string;
   examTitle?: string;
   issuedAt: string;
+  lastVerifiedAt?: string | null;
+  lastVerifiedValid?: boolean | null;
   skillLevel: SkillLevel;
   signatureBase64: string;
 }
