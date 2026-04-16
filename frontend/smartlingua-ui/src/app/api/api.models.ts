@@ -43,6 +43,9 @@ export interface Certificate {
   id: UUID;
   examAttemptId: UUID;
   studentId: UUID;
+  studentName?: string;
+  studentEmail?: string;
+  examTitle?: string;
   issuedAt: string;
   skillLevel: SkillLevel;
   signatureBase64: string;

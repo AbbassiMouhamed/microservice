@@ -6,6 +6,7 @@ import com.smartlingua.examcert.domain.CertificateEntity;
 import com.smartlingua.examcert.domain.ExamAttemptEntity;
 import com.smartlingua.examcert.repo.CertificateRepository;
 import com.smartlingua.examcert.repo.ExamAttemptRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,6 +51,17 @@ public class CertificateService {
     public CertificateEntity getCertificate(UUID certificateId) {
         return certificateRepository.findById(certificateId)
                 .orElseThrow(() -> new NotFoundException("Certificate not found"));
+    }
+
+    @Transactional
+    public void deleteCertificate(UUID certificateId) {
+        CertificateEntity cert = getCertificate(certificateId);
+        try {
+            certificateRepository.delete(cert);
+            certificateRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new BadRequestException("Cannot delete certificate: it is referenced by other data");
+        }
     }
 
     @Transactional

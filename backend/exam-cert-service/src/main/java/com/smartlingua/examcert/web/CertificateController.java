@@ -9,14 +9,17 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.OffsetDateTime;
@@ -49,6 +52,12 @@ public class CertificateController {
     @GetMapping("/{id}")
     public CertificateResponse get(@PathVariable("id") UUID id) {
         return CertificateResponse.from(certificateService.getCertificate(id));
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable("id") UUID id) {
+        certificateService.deleteCertificate(id);
     }
 
     @PostMapping("/issue")
@@ -113,6 +122,9 @@ public class CertificateController {
             UUID id,
             UUID examAttemptId,
             UUID studentId,
+            String studentName,
+            String studentEmail,
+            String examTitle,
             OffsetDateTime issuedAt,
             SkillLevel skillLevel,
             String signatureBase64
@@ -122,6 +134,9 @@ public class CertificateController {
                     c.getId(),
                     c.getExamAttempt().getId(),
                     c.getStudent().getId(),
+                    c.getStudent().getName(),
+                    c.getStudent().getEmail(),
+                    c.getExamAttempt().getExam().getTitle(),
                     c.getIssuedAt(),
                     c.getSkillLevel(),
                     c.getSignatureBase64()

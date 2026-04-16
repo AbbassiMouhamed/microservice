@@ -50,12 +50,18 @@ public class SecurityConfig {
                         .requestMatchers("/api/certificates/me", "/api/certificates/me/**").hasRole("STUDENT")
 
                         // admin-only
-                        .requestMatchers("/api/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/users").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasRole("ADMIN")
+
+                        // teacher/admin can read users (used to display names in tables)
+                        .requestMatchers(HttpMethod.GET, "/api/users", "/api/users/**").hasAnyRole("TEACHER", "ADMIN")
 
                         // teacher/admin
                         .requestMatchers(HttpMethod.POST, "/api/courses").hasAnyRole("TEACHER", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/courses/**").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers("/api/attempts/**").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers("/api/exams/*/attempts").hasAnyRole("TEACHER", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/exams/**").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers("/api/certificates/**").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/exams").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/exams/**").hasAnyRole("TEACHER", "ADMIN")

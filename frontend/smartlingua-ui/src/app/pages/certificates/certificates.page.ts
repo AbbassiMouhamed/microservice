@@ -43,11 +43,11 @@ import { AuthService } from '../../auth/auth.service';
       <mat-card-content>
         <ng-container *ngIf="auth.isStudent; else staffTable">
           <table mat-table [dataSource]="certificates()" class="table">
-            <ng-container matColumnDef="id">
-              <th mat-header-cell *matHeaderCellDef>Certificate</th>
+            <ng-container matColumnDef="exam">
+              <th mat-header-cell *matHeaderCellDef>Exam</th>
               <td mat-cell *matCellDef="let c">
-                <div class="mono">{{ c.id }}</div>
-                <div class="sub mono">Attempt: {{ c.examAttemptId }}</div>
+                <div>{{ c.examTitle || '—' }}</div>
+                <div class="sub mono">Certificate: {{ c.id }}</div>
               </td>
             </ng-container>
 
@@ -93,18 +93,19 @@ import { AuthService } from '../../auth/auth.service';
 
         <ng-template #staffTable>
           <table mat-table [dataSource]="certificates()" class="table">
-            <ng-container matColumnDef="id">
-              <th mat-header-cell *matHeaderCellDef>Certificate</th>
+            <ng-container matColumnDef="exam">
+              <th mat-header-cell *matHeaderCellDef>Exam</th>
               <td mat-cell *matCellDef="let c">
-                <div class="mono">{{ c.id }}</div>
-                <div class="sub mono">Attempt: {{ c.examAttemptId }}</div>
+                <div>{{ c.examTitle || '—' }}</div>
+                <div class="sub mono">Certificate: {{ c.id }}</div>
               </td>
             </ng-container>
 
-            <ng-container matColumnDef="studentId">
+            <ng-container matColumnDef="student">
               <th mat-header-cell *matHeaderCellDef>Student</th>
               <td mat-cell *matCellDef="let c">
-                <div class="mono">{{ c.studentId }}</div>
+                <div>{{ c.studentName || '—' }}</div>
+                <div class="sub">{{ c.studentEmail || '' }}</div>
               </td>
             </ng-container>
 
@@ -140,6 +141,10 @@ import { AuthService } from '../../auth/auth.service';
                   <mat-icon>download</mat-icon>
                   PDF
                 </a>
+                <button mat-button color="warn" type="button" (click)="deleteCertificate(c)">
+                  <mat-icon>delete</mat-icon>
+                  Delete
+                </button>
               </td>
             </ng-container>
 
@@ -205,8 +210,8 @@ export class CertificatesPage {
   readonly validity = signal<Record<UUID, string>>({});
 
   readonly displayedColumns = this.auth.isStudent
-    ? ['id', 'issuedAt', 'skillLevel', 'valid', 'actions']
-    : ['id', 'studentId', 'issuedAt', 'skillLevel', 'valid', 'actions'];
+    ? ['exam', 'issuedAt', 'skillLevel', 'valid', 'actions']
+    : ['exam', 'student', 'issuedAt', 'skillLevel', 'valid', 'actions'];
 
   constructor() {
     this.refresh();
@@ -241,6 +246,25 @@ export class CertificatesPage {
       error: (err) =>
         this.snack.open(err?.error?.message ?? 'Failed to verify', 'Dismiss', { duration: 5000 }),
     });
+  }
+
+  deleteCertificate(cert: Certificate): void {
+    if (this.auth.isStudent) return;
+    if (!confirm(`Delete certificate "${cert.id}"?`)) return;
+
+    this.api
+      .deleteCertificate(cert.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.snack.open('Certificate deleted', 'Dismiss', { duration: 2500 });
+          this.refresh();
+        },
+        error: (err) =>
+          this.snack.open(err?.error?.message ?? 'Failed to delete certificate', 'Dismiss', {
+            duration: 5000,
+          }),
+      });
   }
 
   downloadUrl(id: UUID): string {

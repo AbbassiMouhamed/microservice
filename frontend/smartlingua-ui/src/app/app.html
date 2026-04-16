@@ -13,12 +13,7 @@
         Courses
       </a>
 
-      <a
-        *ngIf="auth.isAdmin"
-        mat-list-item
-        routerLink="/students"
-        routerLinkActive="active"
-      >
+      <a *ngIf="auth.isAdmin" mat-list-item routerLink="/students" routerLinkActive="active">
         Users
       </a>
 

@@ -54,6 +54,21 @@ import { AuthService } from '../../auth/auth.service';
               <td mat-cell *matCellDef="let c">{{ formatDate(c.startDate) }}</td>
             </ng-container>
 
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let c" class="row-actions">
+                <button
+                  mat-button
+                  color="warn"
+                  type="button"
+                  (click)="deleteCourse(c)"
+                  [disabled]="loading()"
+                >
+                  Delete
+                </button>
+              </td>
+            </ng-container>
+
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
             <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
           </table>
@@ -131,6 +146,10 @@ import { AuthService } from '../../auth/auth.service';
       .table {
         width: 100%;
       }
+      .row-actions {
+        display: flex;
+        justify-content: flex-end;
+      }
       .form {
         display: grid;
         gap: 12px;
@@ -155,7 +174,7 @@ export class CoursesPage {
   readonly courses = signal<Course[]>([]);
   readonly loading = signal(false);
 
-  readonly displayedColumns = ['title', 'level', 'startDate'];
+  readonly displayedColumns = ['title', 'level', 'startDate', 'actions'];
 
   readonly form = this.fb.group({
     title: ['', [Validators.required, Validators.minLength(2)]],
@@ -185,6 +204,28 @@ export class CoursesPage {
       .subscribe({
         next: (data) => this.courses.set(data),
         error: () => this.snack.open('Failed to load courses', 'Dismiss', { duration: 4000 }),
+      });
+  }
+
+  deleteCourse(course: Course): void {
+    if (!confirm(`Delete course "${course.title}"?`)) return;
+
+    this.loading.set(true);
+    this.api
+      .deleteCourse(course.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.loading.set(false);
+          this.snack.open('Course deleted', 'Dismiss', { duration: 2500 });
+          this.refresh();
+        },
+        error: (err) => {
+          this.loading.set(false);
+          this.snack.open(err?.error?.message ?? 'Failed to delete course', 'Dismiss', {
+            duration: 5000,
+          });
+        },
       });
   }
 

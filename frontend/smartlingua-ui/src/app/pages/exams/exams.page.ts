@@ -69,6 +69,21 @@ import { AuthService } from '../../auth/auth.service';
             <td mat-cell *matCellDef="let e">{{ e.passingScore }}</td>
           </ng-container>
 
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let e" class="row-actions">
+              <button
+                *ngIf="auth.isTeacherOrAdmin"
+                mat-button
+                color="warn"
+                type="button"
+                (click)="deleteExam(e)"
+              >
+                Delete
+              </button>
+            </td>
+          </ng-container>
+
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
         </table>
@@ -79,6 +94,10 @@ import { AuthService } from '../../auth/auth.service';
     `
       .table {
         width: 100%;
+      }
+      .row-actions {
+        display: flex;
+        justify-content: flex-end;
       }
       .page-header {
         display: grid;
@@ -115,7 +134,9 @@ export class ExamsPage {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly exams = signal<Exam[]>([]);
-  readonly displayedColumns = ['title', 'status', 'scheduledAt', 'maxScore', 'passingScore'];
+  readonly displayedColumns = this.auth.isTeacherOrAdmin
+    ? ['title', 'status', 'scheduledAt', 'maxScore', 'passingScore', 'actions']
+    : ['title', 'status', 'scheduledAt', 'maxScore', 'passingScore'];
 
   constructor() {
     this.refresh();
@@ -128,6 +149,24 @@ export class ExamsPage {
       .subscribe({
         next: (data) => this.exams.set(data),
         error: () => this.snack.open('Failed to load exams', 'Dismiss', { duration: 4000 }),
+      });
+  }
+
+  deleteExam(exam: Exam): void {
+    if (!confirm(`Delete exam "${exam.title}"?`)) return;
+
+    this.api
+      .deleteExam(exam.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.snack.open('Exam deleted', 'Dismiss', { duration: 2500 });
+          this.refresh();
+        },
+        error: (err) =>
+          this.snack.open(err?.error?.message ?? 'Failed to delete exam', 'Dismiss', {
+            duration: 5000,
+          }),
       });
   }
 
