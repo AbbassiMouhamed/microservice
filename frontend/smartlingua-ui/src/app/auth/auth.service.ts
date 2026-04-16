@@ -35,6 +35,30 @@ export class AuthService {
     return ((this.keycloak.tokenParsed as any)?.realm_access?.roles ?? []) as string[];
   }
 
+  hasRole(role: string): boolean {
+    return this.roles.includes(role);
+  }
+
+  hasAnyRole(...roles: string[]): boolean {
+    return roles.some((r) => this.hasRole(r));
+  }
+
+  get isAdmin(): boolean {
+    return this.hasRole('ADMIN');
+  }
+
+  get isTeacher(): boolean {
+    return this.hasRole('TEACHER');
+  }
+
+  get isStudent(): boolean {
+    return this.hasRole('STUDENT');
+  }
+
+  get isTeacherOrAdmin(): boolean {
+    return this.hasAnyRole('TEACHER', 'ADMIN');
+  }
+
   async getValidToken(): Promise<string | null> {
     if (!this.authenticated) return null;
 

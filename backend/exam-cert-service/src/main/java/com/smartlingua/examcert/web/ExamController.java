@@ -5,11 +5,13 @@ import com.smartlingua.examcert.domain.ExamEntity;
 import com.smartlingua.examcert.domain.ExamStatus;
 import com.smartlingua.examcert.domain.SkillLevel;
 import com.smartlingua.examcert.service.ExamService;
+import com.smartlingua.examcert.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,9 +29,11 @@ import java.util.UUID;
 public class ExamController {
 
     private final ExamService examService;
+    private final UserService userService;
 
-    public ExamController(ExamService examService) {
+    public ExamController(ExamService examService, UserService userService) {
         this.examService = examService;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -78,6 +82,20 @@ public class ExamController {
         return ExamAttemptResponse.from(attempt);
     }
 
+    @PostMapping("/{id}/attempts/me")
+    public ExamAttemptResponse submitMyAttempt(
+            @PathVariable("id") UUID id,
+            @RequestBody @Valid SubmitMyAttemptRequest req,
+            JwtAuthenticationToken auth
+    ) {
+        String email = auth.getToken().getClaimAsString("email");
+        String username = auth.getToken().getClaimAsString("preferred_username");
+
+        var student = userService.getOrCreateStudent(username, email);
+        ExamAttemptEntity attempt = examService.submitAttempt(new ExamService.SubmitAttemptCommand(id, student.getId(), req.score()));
+        return ExamAttemptResponse.from(attempt);
+    }
+
     public record CreateExamRequest(
             @NotNull UUID courseId,
             @NotBlank String title,
@@ -89,6 +107,9 @@ public class ExamController {
     }
 
     public record SubmitAttemptRequest(@NotNull UUID studentId, @Min(0) @Max(1000) int score) {
+    }
+
+    public record SubmitMyAttemptRequest(@Min(0) @Max(1000) int score) {
     }
 
     public record ExamResponse(

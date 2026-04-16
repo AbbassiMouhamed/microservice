@@ -11,6 +11,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { ApiClient } from '../../api/api-client.service';
 import { Course } from '../../api/api.models';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
   standalone: true,
@@ -59,7 +60,7 @@ import { Course } from '../../api/api.models';
         </mat-card-content>
       </mat-card>
 
-      <mat-card>
+      <mat-card *ngIf="auth.isTeacherOrAdmin">
         <mat-card-title>Create course</mat-card-title>
         <mat-card-content>
           <form [formGroup]="form" (ngSubmit)="submit()" class="form">
@@ -143,6 +144,8 @@ import { Course } from '../../api/api.models';
   ],
 })
 export class CoursesPage {
+  readonly auth = inject(AuthService);
+
   private readonly api = inject(ApiClient);
   private readonly fb = inject(FormBuilder);
   private readonly snack = inject(MatSnackBar);

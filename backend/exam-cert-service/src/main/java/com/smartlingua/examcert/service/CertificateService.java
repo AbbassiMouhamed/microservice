@@ -43,6 +43,10 @@ public class CertificateService {
         return certificateRepository.findAll();
     }
 
+    public List<CertificateEntity> listCertificatesForStudent(UUID studentId) {
+        return certificateRepository.findByStudent_IdOrderByIssuedAtDesc(studentId);
+    }
+
     public CertificateEntity getCertificate(UUID certificateId) {
         return certificateRepository.findById(certificateId)
                 .orElseThrow(() -> new NotFoundException("Certificate not found"));
