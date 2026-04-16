@@ -35,6 +35,10 @@ export class ApiClient {
     });
   }
 
+  deleteCourse(id: UUID): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/courses/${id}`);
+  }
+
   // Users
   listUsers(type?: UserType): Observable<User[]> {
     let params = new HttpParams();
@@ -44,6 +48,10 @@ export class ApiClient {
 
   createUser(input: { name: string; email: string; userType: UserType }): Observable<User> {
     return this.http.post<User>(`${this.baseUrl}/users`, input);
+  }
+
+  deleteUser(id: UUID): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/users/${id}`);
   }
 
   // Exams
@@ -73,6 +81,10 @@ export class ApiClient {
     return this.http.put<Exam>(`${this.baseUrl}/exams/${id}/publish`, {});
   }
 
+  deleteExam(id: UUID): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/exams/${id}`);
+  }
+
   closeExam(id: UUID): Observable<Exam> {
     return this.http.put<Exam>(`${this.baseUrl}/exams/${id}/close`, {});
   }
@@ -87,6 +99,10 @@ export class ApiClient {
 
   submitMyAttempt(examId: UUID, input: { score: number }): Observable<ExamAttempt> {
     return this.http.post<ExamAttempt>(`${this.baseUrl}/exams/${examId}/attempts/me`, input);
+  }
+
+  deleteAttempt(attemptId: UUID): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/attempts/${attemptId}`);
   }
 
   getAttempt(attemptId: UUID): Observable<ExamAttempt> {
@@ -106,6 +122,10 @@ export class ApiClient {
     return this.http.post<Certificate>(`${this.baseUrl}/certificates/issue`, { examAttemptId });
   }
 
+  deleteCertificate(id: UUID): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/certificates/${id}`);
+  }
+
   getCertificate(id: UUID): Observable<Certificate> {
     return this.http.get<Certificate>(`${this.baseUrl}/certificates/${id}`);
   }
@@ -116,6 +136,16 @@ export class ApiClient {
 
   verifyMyCertificate(id: UUID): Observable<VerifyResult> {
     return this.http.get<VerifyResult>(`${this.baseUrl}/certificates/me/${id}/verify`);
+  }
+
+  downloadCertificatePdf(id: UUID): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/certificates/${id}/download`, { responseType: 'blob' });
+  }
+
+  downloadMyCertificatePdf(id: UUID): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/certificates/me/${id}/download`, {
+      responseType: 'blob',
+    });
   }
 
   getCertificateDownloadUrl(id: UUID): string {

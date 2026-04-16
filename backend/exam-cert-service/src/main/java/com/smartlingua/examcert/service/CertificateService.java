@@ -6,6 +6,7 @@ import com.smartlingua.examcert.domain.CertificateEntity;
 import com.smartlingua.examcert.domain.ExamAttemptEntity;
 import com.smartlingua.examcert.repo.CertificateRepository;
 import com.smartlingua.examcert.repo.ExamAttemptRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +54,17 @@ public class CertificateService {
     }
 
     @Transactional
+    public void deleteCertificate(UUID certificateId) {
+        CertificateEntity cert = getCertificate(certificateId);
+        try {
+            certificateRepository.delete(cert);
+            certificateRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new BadRequestException("Cannot delete certificate: it is referenced by other data");
+        }
+    }
+
+    @Transactional
     public CertificateEntity issueCertificate(UUID examAttemptId) {
         ExamAttemptEntity attempt = attemptRepository.findById(examAttemptId)
                 .orElseThrow(() -> new NotFoundException("Exam attempt not found"));
@@ -95,10 +107,16 @@ public class CertificateService {
         return certificateRepository.save(cert);
     }
 
+    @Transactional
     public VerifyResult verify(UUID certificateId) {
         CertificateEntity cert = getCertificate(certificateId);
         var publicKey = PemKeyUtils.parsePublicKeyPem(cert.getPublicKeyPem());
         boolean valid = signatureService.verify(cert.getPayloadJson(), cert.getSignatureBase64(), publicKey);
+
+        cert.setLastVerifiedAt(OffsetDateTime.now(ZoneOffset.UTC));
+        cert.setLastVerifiedValid(valid);
+        certificateRepository.save(cert);
+
         return new VerifyResult(valid);
     }
 

@@ -3,6 +3,7 @@ package com.smartlingua.examcert.service;
 import com.smartlingua.examcert.domain.UserEntity;
 import com.smartlingua.examcert.domain.UserType;
 import com.smartlingua.examcert.repo.UserRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +39,17 @@ public class UserService {
                 .userType(cmd.userType())
                 .build();
         return userRepository.save(user);
+    }
+
+    @Transactional
+    public void delete(UUID userId) {
+        UserEntity user = get(userId);
+        try {
+            userRepository.delete(user);
+            userRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new BadRequestException("Cannot delete user: it is referenced by other data");
+        }
     }
 
     @Transactional

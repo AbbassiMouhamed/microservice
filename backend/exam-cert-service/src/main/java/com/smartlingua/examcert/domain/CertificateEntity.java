@@ -60,4 +60,11 @@ public class CertificateEntity {
     @Lob
     @Column(name = "pdf_bytes", nullable = false, columnDefinition = "LONGBLOB")
     private byte[] pdfBytes;
+
+    @Column(name = "last_verified_at", nullable = true)
+    private OffsetDateTime lastVerifiedAt;
+
+    @Column(name = "last_verified_valid", nullable = true)
+    private Boolean lastVerifiedValid;
 }
+

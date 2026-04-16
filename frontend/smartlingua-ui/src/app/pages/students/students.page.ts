@@ -47,6 +47,21 @@ import { User, UserType } from '../../api/api.models';
               <td mat-cell *matCellDef="let u">{{ u.email }}</td>
             </ng-container>
 
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let u" class="row-actions">
+                <button
+                  mat-button
+                  color="warn"
+                  type="button"
+                  (click)="deleteUser(u)"
+                  [disabled]="loading()"
+                >
+                  Delete
+                </button>
+              </td>
+            </ng-container>
+
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
             <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
           </table>
@@ -118,6 +133,10 @@ import { User, UserType } from '../../api/api.models';
       .table {
         width: 100%;
       }
+      .row-actions {
+        display: flex;
+        justify-content: flex-end;
+      }
       .form {
         display: grid;
         gap: 12px;
@@ -143,7 +162,7 @@ export class StudentsPage {
   readonly students = signal<User[]>([]);
   readonly loading = signal(false);
 
-  readonly displayedColumns = ['name', 'email'];
+  readonly displayedColumns = ['name', 'email', 'actions'];
 
   readonly form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
@@ -162,6 +181,28 @@ export class StudentsPage {
       .subscribe({
         next: (data) => this.students.set(data),
         error: () => this.snack.open('Failed to load students', 'Dismiss', { duration: 4000 }),
+      });
+  }
+
+  deleteUser(user: User): void {
+    if (!confirm(`Delete user "${user.name}"?`)) return;
+
+    this.loading.set(true);
+    this.api
+      .deleteUser(user.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.loading.set(false);
+          this.snack.open('User deleted', 'Dismiss', { duration: 2500 });
+          this.refresh();
+        },
+        error: (err) => {
+          this.loading.set(false);
+          this.snack.open(err?.error?.message ?? 'Failed to delete user', 'Dismiss', {
+            duration: 5000,
+          });
+        },
       });
   }
 

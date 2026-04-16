@@ -101,14 +101,17 @@ import { AuthService } from '../../auth/auth.service';
 
     <div class="grid">
       <mat-card *ngIf="auth.isTeacherOrAdmin">
-        <mat-card-title>Attempts</mat-card-title>
+        <mat-card-title class="title-row">
+          <span>Attempts</span>
+          <span class="spacer"></span>
+          <a mat-stroked-button [routerLink]="['/certificates']">Certificates</a>
+        </mat-card-title>
         <mat-card-content>
           <table mat-table [dataSource]="attempts()" class="table">
             <ng-container matColumnDef="student">
               <th mat-header-cell *matHeaderCellDef>Student</th>
               <td mat-cell *matCellDef="let a">
                 {{ studentNameById()(a.studentId) }}
-                <div class="sub mono">{{ a.studentId }}</div>
               </td>
             </ng-container>
 
@@ -135,7 +138,6 @@ import { AuthService } from '../../auth/auth.service';
             <ng-container matColumnDef="actions">
               <th mat-header-cell *matHeaderCellDef></th>
               <td mat-cell *matCellDef="let a" class="row-actions">
-                <a mat-button [routerLink]="['/certificates']" *ngIf="a.passed">Certificates</a>
                 <button
                   mat-raised-button
                   color="primary"
@@ -144,6 +146,9 @@ import { AuthService } from '../../auth/auth.service';
                   [disabled]="!a.passed"
                 >
                   Issue
+                </button>
+                <button mat-button color="warn" type="button" (click)="deleteAttempt(a)">
+                  Delete
                 </button>
               </td>
             </ng-container>
@@ -583,6 +588,28 @@ export class ExamDetailPage {
         error: (err) =>
           this.snack.open(
             err?.error?.detail ?? err?.error?.message ?? 'Failed to issue certificate',
+            'Dismiss',
+            {
+              duration: 5000,
+            },
+          ),
+      });
+  }
+
+  deleteAttempt(attempt: ExamAttempt): void {
+    if (!confirm(`Delete attempt for ${this.studentNameById()(attempt.studentId)}?`)) return;
+
+    this.api
+      .deleteAttempt(attempt.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.snack.open('Attempt deleted', 'Dismiss', { duration: 2500 });
+          this.refresh();
+        },
+        error: (err) =>
+          this.snack.open(
+            err?.error?.detail ?? err?.error?.message ?? 'Failed to delete attempt',
             'Dismiss',
             {
               duration: 5000,

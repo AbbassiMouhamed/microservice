@@ -2,6 +2,7 @@ package com.smartlingua.examcert.service;
 
 import com.smartlingua.examcert.domain.CourseEntity;
 import com.smartlingua.examcert.repo.CourseRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +36,17 @@ public class CourseService {
                 .startDate(cmd.startDate())
                 .build();
         return courseRepository.save(course);
+    }
+
+    @Transactional
+    public void delete(UUID courseId) {
+        CourseEntity course = get(courseId);
+        try {
+            courseRepository.delete(course);
+            courseRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new BadRequestException("Cannot delete course: it is referenced by other data");
+        }
     }
 
     public record CreateCourseCommand(String title, String level, OffsetDateTime startDate) {

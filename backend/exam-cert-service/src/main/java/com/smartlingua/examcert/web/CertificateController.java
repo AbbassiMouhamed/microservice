@@ -9,14 +9,17 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.OffsetDateTime;
@@ -51,6 +54,12 @@ public class CertificateController {
         return CertificateResponse.from(certificateService.getCertificate(id));
     }
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable("id") UUID id) {
+        certificateService.deleteCertificate(id);
+    }
+
     @PostMapping("/issue")
     public CertificateResponse issue(@RequestBody @Valid IssueCertificateRequest req) {
         return CertificateResponse.from(certificateService.issueCertificate(req.examAttemptId()));
@@ -68,8 +77,16 @@ public class CertificateController {
     }
 
     @GetMapping("/{id}/download")
-    public ResponseEntity<byte[]> download(@PathVariable("id") UUID id) {
+    public ResponseEntity<byte[]> download(@PathVariable("id") UUID id, JwtAuthenticationToken auth) {
         CertificateEntity cert = certificateService.getCertificate(id);
+
+        if (isStudentOnly(auth)) {
+            var student = resolveStudent(auth);
+            if (!cert.getStudent().getId().equals(student.getId())) {
+                throw new NotFoundException("Certificate not found");
+            }
+        }
+
         return toPdfResponse(cert);
     }
 
@@ -83,6 +100,16 @@ public class CertificateController {
         String email = auth.getToken().getClaimAsString("email");
         String username = auth.getToken().getClaimAsString("preferred_username");
         return userService.getOrCreateStudent(username, email);
+    }
+
+    private boolean isStudentOnly(JwtAuthenticationToken auth) {
+        if (auth == null) return false;
+
+        boolean isStudent = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_STUDENT"));
+        boolean isTeacher = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_TEACHER"));
+        boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        return isStudent && !isTeacher && !isAdmin;
     }
 
     private CertificateEntity requireOwnedCertificate(UUID certificateId, JwtAuthenticationToken auth) {
@@ -113,7 +140,12 @@ public class CertificateController {
             UUID id,
             UUID examAttemptId,
             UUID studentId,
+            String studentName,
+            String studentEmail,
+            String examTitle,
             OffsetDateTime issuedAt,
+            OffsetDateTime lastVerifiedAt,
+            Boolean lastVerifiedValid,
             SkillLevel skillLevel,
             String signatureBase64
     ) {
@@ -122,7 +154,12 @@ public class CertificateController {
                     c.getId(),
                     c.getExamAttempt().getId(),
                     c.getStudent().getId(),
+                    c.getStudent().getName(),
+                    c.getStudent().getEmail(),
+                    c.getExamAttempt().getExam().getTitle(),
                     c.getIssuedAt(),
+                    c.getLastVerifiedAt(),
+                    c.getLastVerifiedValid(),
                     c.getSkillLevel(),
                     c.getSignatureBase64()
             );

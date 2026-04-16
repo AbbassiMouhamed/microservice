@@ -43,11 +43,11 @@ import { AuthService } from '../../auth/auth.service';
       <mat-card-content>
         <ng-container *ngIf="auth.isStudent; else staffTable">
           <table mat-table [dataSource]="certificates()" class="table">
-            <ng-container matColumnDef="id">
-              <th mat-header-cell *matHeaderCellDef>Certificate</th>
+            <ng-container matColumnDef="exam">
+              <th mat-header-cell *matHeaderCellDef>Exam</th>
               <td mat-cell *matCellDef="let c">
-                <div class="mono">{{ c.id }}</div>
-                <div class="sub mono">Attempt: {{ c.examAttemptId }}</div>
+                <div>{{ c.examTitle || '—' }}</div>
+                <div class="sub mono">Certificate: {{ c.id }}</div>
               </td>
             </ng-container>
 
@@ -63,26 +63,16 @@ import { AuthService } from '../../auth/auth.service';
 
             <ng-container matColumnDef="valid">
               <th mat-header-cell *matHeaderCellDef>Signature</th>
-              <td mat-cell *matCellDef="let c">{{ validity()[c.id] || '-' }}</td>
+              <td mat-cell *matCellDef="let c">{{ signatureStatus(c) }}</td>
             </ng-container>
 
             <ng-container matColumnDef="actions">
               <th mat-header-cell *matHeaderCellDef></th>
               <td mat-cell *matCellDef="let c" class="row-actions">
-                <button mat-button type="button" (click)="verify(c.id)">
-                  <mat-icon>verified</mat-icon>
-                  Verify
-                </button>
-                <a
-                  mat-raised-button
-                  color="primary"
-                  [href]="downloadUrl(c.id)"
-                  target="_blank"
-                  rel="noopener"
-                >
+                <button mat-raised-button color="primary" type="button" (click)="download(c)">
                   <mat-icon>download</mat-icon>
                   PDF
-                </a>
+                </button>
               </td>
             </ng-container>
 
@@ -93,18 +83,19 @@ import { AuthService } from '../../auth/auth.service';
 
         <ng-template #staffTable>
           <table mat-table [dataSource]="certificates()" class="table">
-            <ng-container matColumnDef="id">
-              <th mat-header-cell *matHeaderCellDef>Certificate</th>
+            <ng-container matColumnDef="exam">
+              <th mat-header-cell *matHeaderCellDef>Exam</th>
               <td mat-cell *matCellDef="let c">
-                <div class="mono">{{ c.id }}</div>
-                <div class="sub mono">Attempt: {{ c.examAttemptId }}</div>
+                <div>{{ c.examTitle || '—' }}</div>
+                <div class="sub mono">Certificate: {{ c.id }}</div>
               </td>
             </ng-container>
 
-            <ng-container matColumnDef="studentId">
+            <ng-container matColumnDef="student">
               <th mat-header-cell *matHeaderCellDef>Student</th>
               <td mat-cell *matCellDef="let c">
-                <div class="mono">{{ c.studentId }}</div>
+                <div>{{ c.studentName || '—' }}</div>
+                <div class="sub">{{ c.studentEmail || '' }}</div>
               </td>
             </ng-container>
 
@@ -120,7 +111,7 @@ import { AuthService } from '../../auth/auth.service';
 
             <ng-container matColumnDef="valid">
               <th mat-header-cell *matHeaderCellDef>Signature</th>
-              <td mat-cell *matCellDef="let c">{{ validity()[c.id] || '-' }}</td>
+              <td mat-cell *matCellDef="let c">{{ signatureStatus(c) }}</td>
             </ng-container>
 
             <ng-container matColumnDef="actions">
@@ -130,16 +121,14 @@ import { AuthService } from '../../auth/auth.service';
                   <mat-icon>verified</mat-icon>
                   Verify
                 </button>
-                <a
-                  mat-raised-button
-                  color="primary"
-                  [href]="downloadUrl(c.id)"
-                  target="_blank"
-                  rel="noopener"
-                >
+                <button mat-raised-button color="primary" type="button" (click)="download(c)">
                   <mat-icon>download</mat-icon>
                   PDF
-                </a>
+                </button>
+                <button mat-button color="warn" type="button" (click)="deleteCertificate(c)">
+                  <mat-icon>delete</mat-icon>
+                  Delete
+                </button>
               </td>
             </ng-container>
 
@@ -205,8 +194,8 @@ export class CertificatesPage {
   readonly validity = signal<Record<UUID, string>>({});
 
   readonly displayedColumns = this.auth.isStudent
-    ? ['id', 'issuedAt', 'skillLevel', 'valid', 'actions']
-    : ['id', 'studentId', 'issuedAt', 'skillLevel', 'valid', 'actions'];
+    ? ['exam', 'issuedAt', 'skillLevel', 'valid', 'actions']
+    : ['exam', 'student', 'issuedAt', 'skillLevel', 'valid', 'actions'];
 
   constructor() {
     this.refresh();
@@ -226,6 +215,17 @@ export class CertificatesPage {
     return this.datePipe.transform(value, 'medium') ?? value;
   }
 
+  signatureStatus(c: Certificate): string {
+    const current = this.validity()[c.id];
+    if (current) return current;
+
+    if (typeof c.lastVerifiedValid === 'boolean') {
+      return c.lastVerifiedValid ? 'Valid' : 'Invalid';
+    }
+
+    return '-';
+  }
+
   verify(id: UUID): void {
     const req$ = this.auth.isStudent
       ? this.api.verifyMyCertificate(id)
@@ -241,6 +241,46 @@ export class CertificatesPage {
       error: (err) =>
         this.snack.open(err?.error?.message ?? 'Failed to verify', 'Dismiss', { duration: 5000 }),
     });
+  }
+
+  download(c: Certificate): void {
+    const req$ = this.auth.isStudent
+      ? this.api.downloadMyCertificatePdf(c.id)
+      : this.api.downloadCertificatePdf(c.id);
+
+    req$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `certificate-${c.id}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: (err) =>
+        this.snack.open(err?.error?.message ?? 'Failed to download PDF', 'Dismiss', {
+          duration: 5000,
+        }),
+    });
+  }
+
+  deleteCertificate(cert: Certificate): void {
+    if (this.auth.isStudent) return;
+    if (!confirm(`Delete certificate "${cert.id}"?`)) return;
+
+    this.api
+      .deleteCertificate(cert.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.snack.open('Certificate deleted', 'Dismiss', { duration: 2500 });
+          this.refresh();
+        },
+        error: (err) =>
+          this.snack.open(err?.error?.message ?? 'Failed to delete certificate', 'Dismiss', {
+            duration: 5000,
+          }),
+      });
   }
 
   downloadUrl(id: UUID): string {

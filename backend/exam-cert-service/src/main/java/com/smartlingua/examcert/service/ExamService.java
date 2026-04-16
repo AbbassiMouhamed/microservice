@@ -10,6 +10,7 @@ import com.smartlingua.examcert.repo.CourseRepository;
 import com.smartlingua.examcert.repo.ExamAttemptRepository;
 import com.smartlingua.examcert.repo.ExamRepository;
 import com.smartlingua.examcert.repo.UserRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -140,6 +141,28 @@ public class ExamService {
     public ExamAttemptEntity getAttempt(UUID attemptId) {
         return examAttemptRepository.findById(attemptId)
                 .orElseThrow(() -> new NotFoundException("Exam attempt not found"));
+    }
+
+    @Transactional
+    public void deleteExam(UUID examId) {
+        ExamEntity exam = getExam(examId);
+        try {
+            examRepository.delete(exam);
+            examRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new BadRequestException("Cannot delete exam: it is referenced by other data");
+        }
+    }
+
+    @Transactional
+    public void deleteAttempt(UUID attemptId) {
+        ExamAttemptEntity attempt = getAttempt(attemptId);
+        try {
+            examAttemptRepository.delete(attempt);
+            examAttemptRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new BadRequestException("Cannot delete attempt: it is referenced by other data");
+        }
     }
 
     public record CreateExamCommand(
