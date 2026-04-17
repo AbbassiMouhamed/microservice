@@ -1,0 +1,118 @@
+<mat-sidenav-container class="shell-container">
+  <!-- Sidebar -->
+  <mat-sidenav
+    #sidenav
+    [mode]="isMobile() ? 'over' : 'side'"
+    [opened]="sidenavOpened()"
+    class="shell-sidenav"
+  >
+    <!-- Brand -->
+    <div class="brand">
+      <mat-icon class="brand-icon">translate</mat-icon>
+      <span class="brand-text">SmartLingua</span>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Navigation Groups -->
+    <div class="nav-content">
+      @for (group of navGroups; track group.label) {
+        @if (isGroupVisible(group)) {
+          <div class="nav-group">
+            <div class="nav-group-label">{{ group.label }}</div>
+            <mat-nav-list dense>
+              @for (item of group.items; track item.route) {
+                @if (isVisible(item)) {
+                  <a
+                    mat-list-item
+                    [routerLink]="item.route"
+                    routerLinkActive="active-link"
+                    [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }"
+                    class="nav-item"
+                  >
+                    <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+                    <span matListItemTitle>{{ item.label }}</span>
+                    @if (item.label === 'Forum' && unreadNotifications() > 0) {
+                      <span class="nav-badge">{{ unreadNotifications() }}</span>
+                    }
+                  </a>
+                }
+              }
+            </mat-nav-list>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- User card at bottom -->
+    <div class="sidenav-footer">
+      <mat-divider></mat-divider>
+      <div class="user-card">
+        <div class="user-avatar">
+          {{ auth.username?.charAt(0)?.toUpperCase() || '?' }}
+        </div>
+        <div class="user-info">
+          <span class="user-name">{{ auth.username }}</span>
+          <span class="user-role">{{ auth.roles[0] || 'User' }}</span>
+        </div>
+      </div>
+    </div>
+  </mat-sidenav>
+
+  <!-- Main Content -->
+  <mat-sidenav-content class="shell-content">
+    <!-- Toolbar -->
+    <mat-toolbar class="shell-toolbar">
+      <button mat-icon-button (click)="toggleSidenav()" matTooltip="Toggle menu">
+        <mat-icon>menu</mat-icon>
+      </button>
+
+      <span class="toolbar-title">SmartLingua</span>
+      <span class="toolbar-spacer"></span>
+
+      <!-- Notification bell -->
+      <button
+        mat-icon-button
+        routerLink="/forum/notifications"
+        matTooltip="Notifications"
+        [matBadge]="unreadNotifications() || null"
+        matBadgeColor="warn"
+        matBadgeSize="small"
+        [matBadgeHidden]="unreadNotifications() === 0"
+      >
+        <mat-icon>notifications</mat-icon>
+      </button>
+
+      <!-- User menu -->
+      <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Account">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+
+      <mat-menu #userMenu="matMenu">
+        <div class="menu-header">
+          <strong>{{ auth.username }}</strong>
+          <small>{{ auth.roles.join(', ') }}</small>
+        </div>
+        <mat-divider></mat-divider>
+        <button mat-menu-item routerLink="/learning/profile">
+          <mat-icon>person</mat-icon>
+          <span>My Profile</span>
+        </button>
+        <button mat-menu-item routerLink="/learning">
+          <mat-icon>trending_up</mat-icon>
+          <span>My Progress</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="auth.logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Logout</span>
+        </button>
+      </mat-menu>
+    </mat-toolbar>
+
+    <!-- Page content -->
+    <main class="page-content">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

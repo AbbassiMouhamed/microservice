@@ -8,6 +8,6 @@ export const requireRoles = (...roles: string[]): CanActivateFn => {
     if (auth.hasAnyRole(...roles)) return true;
 
     const router = inject(Router);
-    return router.parseUrl('/exams');
+    return router.parseUrl('/dashboard');
   };
 };
