@@ -12,6 +12,7 @@
 
     <modules>
         <module>discovery-server</module>
+        <module>config-server</module>
         <module>api-gateway</module>
         <module>exam-cert-service</module>
         <module>forum-service</module>

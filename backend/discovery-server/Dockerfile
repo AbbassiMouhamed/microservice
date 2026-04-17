@@ -2,6 +2,7 @@ FROM maven:3.9.9-eclipse-temurin-17 AS build
 WORKDIR /workspace
 
 COPY backend/pom.xml backend/pom.xml
+COPY backend/config-server/pom.xml backend/config-server/pom.xml
 COPY backend/discovery-server/pom.xml backend/discovery-server/pom.xml
 COPY backend/api-gateway/pom.xml backend/api-gateway/pom.xml
 COPY backend/exam-cert-service/pom.xml backend/exam-cert-service/pom.xml

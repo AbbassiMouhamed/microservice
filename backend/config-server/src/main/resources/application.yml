@@ -1,0 +1,25 @@
+server:
+  port: ${SERVER_PORT:8888}
+
+spring:
+  application:
+    name: config-server
+  profiles:
+    active: native
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: classpath:/config
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URL:http://discovery-server:8761/eureka}
+    register-with-eureka: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
