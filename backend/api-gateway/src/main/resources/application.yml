@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: api-gateway
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://config-server:8888}
   security:
     oauth2:
       resourceserver:
@@ -64,4 +66,4 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,refresh

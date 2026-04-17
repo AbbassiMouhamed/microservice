@@ -34,12 +34,24 @@ services:
     ports:
       - "8761:8761"
 
+  config-server:
+    build:
+      context: .
+      dockerfile: backend/config-server/Dockerfile
+    environment:
+      EUREKA_URL: http://discovery-server:8761/eureka
+    ports:
+      - "8888:8888"
+    depends_on:
+      - discovery-server
+
   api-gateway:
     build:
       context: .
       dockerfile: backend/api-gateway/Dockerfile
     environment:
       EUREKA_URL: http://discovery-server:8761/eureka
+      CONFIG_SERVER_URL: http://config-server:8888
       SERVER_PORT: 8080
       CORS_ALLOWED_ORIGINS: http://localhost
       # Tokens are issued with issuer=http://localhost:8180/... because the browser logs in via the host port.
@@ -50,6 +62,7 @@ services:
       - "8080:8080"
     depends_on:
       - discovery-server
+      - config-server
       - keycloak
 
   exam-cert-service:
@@ -58,6 +71,7 @@ services:
       dockerfile: backend/exam-cert-service/Dockerfile
     environment:
       EUREKA_URL: http://discovery-server:8761/eureka
+      CONFIG_SERVER_URL: http://config-server:8888
       SERVER_PORT: 8081
       DB_URL: jdbc:mysql://mysql:3306/smartlingua?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       DB_USERNAME: smartlingua
@@ -71,6 +85,8 @@ services:
       mysql:
         condition: service_healthy
       discovery-server:
+        condition: service_started
+      config-server:
         condition: service_started
       keycloak:
         condition: service_started
@@ -92,6 +108,7 @@ services:
       dockerfile: backend/forum-service/Dockerfile
     environment:
       EUREKA_URL: http://discovery-server:8761/eureka
+      CONFIG_SERVER_URL: http://config-server:8888
       SERVER_PORT: 8082
       DB_URL: jdbc:mysql://mysql:3306/smartlingua?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       DB_USERNAME: smartlingua
@@ -105,6 +122,8 @@ services:
         condition: service_healthy
       discovery-server:
         condition: service_started
+      config-server:
+        condition: service_started
       keycloak:
         condition: service_started
 
@@ -114,6 +133,7 @@ services:
       dockerfile: backend/course-resource-service/Dockerfile
     environment:
       EUREKA_URL: http://discovery-server:8761/eureka
+      CONFIG_SERVER_URL: http://config-server:8888
       SERVER_PORT: 8083
       DB_URL: jdbc:mysql://mysql:3306/smartlingua?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       DB_USERNAME: smartlingua
@@ -127,6 +147,8 @@ services:
         condition: service_healthy
       discovery-server:
         condition: service_started
+      config-server:
+        condition: service_started
       keycloak:
         condition: service_started
 
@@ -136,6 +158,7 @@ services:
       dockerfile: backend/quiz-service/Dockerfile
     environment:
       EUREKA_URL: http://discovery-server:8761/eureka
+      CONFIG_SERVER_URL: http://config-server:8888
       SERVER_PORT: 8084
       DB_URL: jdbc:mysql://mysql:3306/smartlingua?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       DB_USERNAME: smartlingua
@@ -149,6 +172,8 @@ services:
         condition: service_healthy
       discovery-server:
         condition: service_started
+      config-server:
+        condition: service_started
       keycloak:
         condition: service_started
 
@@ -158,6 +183,7 @@ services:
       dockerfile: backend/messaging-service/Dockerfile
     environment:
       EUREKA_URL: http://discovery-server:8761/eureka
+      CONFIG_SERVER_URL: http://config-server:8888
       SERVER_PORT: 8085
       DB_URL: jdbc:mysql://mysql:3306/smartlingua?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       DB_USERNAME: smartlingua
@@ -171,6 +197,8 @@ services:
         condition: service_healthy
       discovery-server:
         condition: service_started
+      config-server:
+        condition: service_started
       keycloak:
         condition: service_started
 
@@ -180,6 +208,7 @@ services:
       dockerfile: backend/adaptive-learning-service/Dockerfile
     environment:
       EUREKA_URL: http://discovery-server:8761/eureka
+      CONFIG_SERVER_URL: http://config-server:8888
       SERVER_PORT: 8086
       DB_URL: jdbc:mysql://mysql:3306/smartlingua?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       DB_USERNAME: smartlingua
@@ -192,6 +221,8 @@ services:
       mysql:
         condition: service_healthy
       discovery-server:
+        condition: service_started
+      config-server:
         condition: service_started
       keycloak:
         condition: service_started
