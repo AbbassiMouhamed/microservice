@@ -3,6 +3,8 @@ package com.smartlingua.examcert.web;
 import com.smartlingua.examcert.domain.UserEntity;
 import com.smartlingua.examcert.domain.UserType;
 import com.smartlingua.examcert.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -23,6 +25,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users")
+@Tag(name = "Users", description = "User management for exam & certification context")
 public class UserController {
 
     private final UserService userService;
@@ -32,16 +35,19 @@ public class UserController {
     }
 
     @GetMapping
+    @Operation(summary = "List users, optionally filtered by type")
     public List<UserResponse> list(@RequestParam(name = "type", required = false) UserType type) {
         return userService.list(type).stream().map(UserResponse::from).toList();
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get user by ID")
     public UserResponse get(@PathVariable("id") UUID id) {
         return UserResponse.from(userService.get(id));
     }
 
     @PostMapping
+    @Operation(summary = "Create a new user")
     public UserResponse create(@RequestBody @Valid CreateUserRequest req) {
         UserEntity user = userService.create(new UserService.CreateUserCommand(req.name(), req.email(), req.userType()));
         return UserResponse.from(user);
@@ -49,6 +55,7 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Delete a user")
     public void delete(@PathVariable("id") UUID id) {
         userService.delete(id);
     }

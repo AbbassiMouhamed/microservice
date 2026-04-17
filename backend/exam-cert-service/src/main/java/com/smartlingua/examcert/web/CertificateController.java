@@ -5,6 +5,8 @@ import com.smartlingua.examcert.domain.SkillLevel;
 import com.smartlingua.examcert.service.CertificateService;
 import com.smartlingua.examcert.service.NotFoundException;
 import com.smartlingua.examcert.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ContentDisposition;
@@ -28,6 +30,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/certificates")
+@Tag(name = "Certificates", description = "Issue, verify, download and manage certificates")
 public class CertificateController {
 
     private final CertificateService certificateService;
@@ -39,44 +42,52 @@ public class CertificateController {
     }
 
     @GetMapping
+    @Operation(summary = "List all certificates")
     public List<CertificateResponse> list() {
         return certificateService.listCertificates().stream().map(CertificateResponse::from).toList();
     }
 
     @GetMapping("/me")
+    @Operation(summary = "List my certificates")
     public List<CertificateResponse> listMine(JwtAuthenticationToken auth) {
         var student = resolveStudent(auth);
         return certificateService.listCertificatesForStudent(student.getId()).stream().map(CertificateResponse::from).toList();
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get certificate by ID")
     public CertificateResponse get(@PathVariable("id") UUID id) {
         return CertificateResponse.from(certificateService.getCertificate(id));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Delete a certificate")
     public void delete(@PathVariable("id") UUID id) {
         certificateService.deleteCertificate(id);
     }
 
     @PostMapping("/issue")
+    @Operation(summary = "Issue a certificate for an exam attempt")
     public CertificateResponse issue(@RequestBody @Valid IssueCertificateRequest req) {
         return CertificateResponse.from(certificateService.issueCertificate(req.examAttemptId()));
     }
 
     @GetMapping("/{id}/verify")
+    @Operation(summary = "Verify a certificate")
     public CertificateService.VerifyResult verify(@PathVariable("id") UUID id) {
         return certificateService.verify(id);
     }
 
     @GetMapping("/me/{id}/verify")
+    @Operation(summary = "Verify my own certificate")
     public CertificateService.VerifyResult verifyMine(@PathVariable("id") UUID id, JwtAuthenticationToken auth) {
         requireOwnedCertificate(id, auth);
         return certificateService.verify(id);
     }
 
     @GetMapping("/{id}/download")
+    @Operation(summary = "Download certificate as PDF")
     public ResponseEntity<byte[]> download(@PathVariable("id") UUID id, JwtAuthenticationToken auth) {
         CertificateEntity cert = certificateService.getCertificate(id);
 
@@ -91,6 +102,7 @@ public class CertificateController {
     }
 
     @GetMapping("/me/{id}/download")
+    @Operation(summary = "Download my own certificate as PDF")
     public ResponseEntity<byte[]> downloadMine(@PathVariable("id") UUID id, JwtAuthenticationToken auth) {
         CertificateEntity cert = requireOwnedCertificate(id, auth);
         return toPdfResponse(cert);

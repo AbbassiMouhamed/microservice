@@ -3,6 +3,8 @@ package com.smartlingua.messaging.controller;
 import com.smartlingua.messaging.dto.CreateInvitationRequest;
 import com.smartlingua.messaging.dto.InvitationDTO;
 import com.smartlingua.messaging.service.InvitationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,12 +17,14 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/messaging/invitations")
+@Tag(name = "Invitations", description = "Create, accept, reject and list invitations")
 public class InvitationController {
 
     @Autowired private InvitationService invitationService;
     @Autowired private SimpMessagingTemplate messagingTemplate;
 
     @PostMapping("/create")
+    @Operation(summary = "Create an invitation")
     public ResponseEntity<?> createInvitation(@RequestBody CreateInvitationRequest request) {
         try {
             InvitationDTO inv = invitationService.createInvitation(
@@ -33,21 +37,25 @@ public class InvitationController {
     }
 
     @GetMapping("/received/{userId}")
+    @Operation(summary = "Get received invitations")
     public ResponseEntity<List<InvitationDTO>> getReceivedInvitations(@PathVariable Long userId) {
         return ResponseEntity.ok(invitationService.getReceivedInvitations(userId));
     }
 
     @GetMapping("/sent/{userId}")
+    @Operation(summary = "Get sent invitations")
     public ResponseEntity<List<InvitationDTO>> getSentInvitations(@PathVariable Long userId) {
         return ResponseEntity.ok(invitationService.getSentInvitations(userId));
     }
 
     @GetMapping("/pending/{userId}")
+    @Operation(summary = "Get pending invitations")
     public ResponseEntity<List<InvitationDTO>> getPendingInvitations(@PathVariable Long userId) {
         return ResponseEntity.ok(invitationService.getPendingInvitations(userId));
     }
 
     @PutMapping("/{invitationId}/accept")
+    @Operation(summary = "Accept an invitation")
     public ResponseEntity<?> acceptInvitation(@PathVariable Long invitationId) {
         try {
             InvitationDTO inv = invitationService.acceptInvitation(invitationId);
@@ -63,6 +71,7 @@ public class InvitationController {
     }
 
     @PutMapping("/{invitationId}/reject")
+    @Operation(summary = "Reject an invitation")
     public ResponseEntity<?> rejectInvitation(@PathVariable Long invitationId) {
         try {
             InvitationDTO inv = invitationService.rejectInvitation(invitationId);
@@ -78,6 +87,7 @@ public class InvitationController {
     }
 
     @GetMapping("/pending-count/{userId}")
+    @Operation(summary = "Get pending invitation count")
     public ResponseEntity<Long> getPendingCount(@PathVariable Long userId) {
         return ResponseEntity.ok(invitationService.countPendingInvitations(userId));
     }

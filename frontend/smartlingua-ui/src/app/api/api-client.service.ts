@@ -20,7 +20,7 @@ export class ApiClient {
 
   // Courses
   listCourses(): Observable<Course[]> {
-    return this.http.get<Course[]>(`${this.baseUrl}/courses`);
+    return this.http.get<Course[]>(`${this.baseUrl}/exams/courses`);
   }
 
   createCourse(input: {
@@ -28,7 +28,7 @@ export class ApiClient {
     level?: string | null;
     startDate?: string | null;
   }): Observable<Course> {
-    return this.http.post<Course>(`${this.baseUrl}/courses`, {
+    return this.http.post<Course>(`${this.baseUrl}/exams/courses`, {
       title: input.title,
       level: input.level ?? null,
       startDate: input.startDate ?? null,
@@ -36,7 +36,7 @@ export class ApiClient {
   }
 
   deleteCourse(id: UUID): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/courses/${id}`);
+    return this.http.delete<void>(`${this.baseUrl}/exams/courses/${id}`);
   }
 
   // Users

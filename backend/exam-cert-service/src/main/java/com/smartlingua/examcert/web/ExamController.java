@@ -6,6 +6,8 @@ import com.smartlingua.examcert.domain.ExamStatus;
 import com.smartlingua.examcert.domain.SkillLevel;
 import com.smartlingua.examcert.service.ExamService;
 import com.smartlingua.examcert.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -29,6 +31,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/exams")
+@Tag(name = "Exams", description = "Exam lifecycle — create, publish, close, delete exams and manage attempts")
 public class ExamController {
 
     private final ExamService examService;
@@ -40,16 +43,19 @@ public class ExamController {
     }
 
     @GetMapping
+    @Operation(summary = "List all exams")
     public List<ExamResponse> list() {
         return examService.listExams().stream().map(ExamResponse::from).toList();
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get exam by ID")
     public ExamResponse get(@PathVariable("id") UUID id) {
         return ExamResponse.from(examService.getExam(id));
     }
 
     @PostMapping
+    @Operation(summary = "Create a new exam")
     public ExamResponse create(@RequestBody @Valid CreateExamRequest req) {
         ExamEntity exam = examService.createExam(
                 new ExamService.CreateExamCommand(
@@ -65,33 +71,39 @@ public class ExamController {
     }
 
     @PutMapping("/{id}/publish")
+    @Operation(summary = "Publish a draft exam")
     public ExamResponse publish(@PathVariable("id") UUID id) {
         return ExamResponse.from(examService.publish(id));
     }
 
     @PutMapping("/{id}/close")
+    @Operation(summary = "Close an exam")
     public ExamResponse close(@PathVariable("id") UUID id) {
         return ExamResponse.from(examService.close(id));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Delete an exam")
     public void delete(@PathVariable("id") UUID id) {
         examService.deleteExam(id);
     }
 
     @GetMapping("/{id}/attempts")
+    @Operation(summary = "List all attempts for an exam")
     public List<ExamAttemptResponse> listAttempts(@PathVariable("id") UUID id) {
         return examService.listAttempts(id).stream().map(ExamAttemptResponse::from).toList();
     }
 
     @PostMapping("/{id}/attempts")
+    @Operation(summary = "Submit an exam attempt for a student")
     public ExamAttemptResponse submitAttempt(@PathVariable("id") UUID id, @RequestBody @Valid SubmitAttemptRequest req) {
         ExamAttemptEntity attempt = examService.submitAttempt(new ExamService.SubmitAttemptCommand(id, req.studentId(), req.score()));
         return ExamAttemptResponse.from(attempt);
     }
 
     @PostMapping("/{id}/attempts/me")
+    @Operation(summary = "Submit my own exam attempt (authenticated user)")
     public ExamAttemptResponse submitMyAttempt(
             @PathVariable("id") UUID id,
             @RequestBody @Valid SubmitMyAttemptRequest req,
