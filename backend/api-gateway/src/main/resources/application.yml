@@ -38,6 +38,44 @@ spring:
           uri: lb://exam-cert-service
           predicates:
             - Path=/api/**
+
+        # ── Swagger doc routes ──
+        - id: exam-cert-service-docs
+          uri: lb://exam-cert-service
+          predicates:
+            - Path=/exam-cert-service/v3/api-docs/**
+          filters:
+            - StripPrefix=1
+        - id: forum-service-docs
+          uri: lb://forum-service
+          predicates:
+            - Path=/forum-service/v3/api-docs/**
+          filters:
+            - StripPrefix=1
+        - id: course-resource-service-docs
+          uri: lb://course-resource-service
+          predicates:
+            - Path=/course-resource-service/v3/api-docs/**
+          filters:
+            - StripPrefix=1
+        - id: quiz-service-docs
+          uri: lb://quiz-service
+          predicates:
+            - Path=/quiz-service/v3/api-docs/**
+          filters:
+            - StripPrefix=1
+        - id: messaging-service-docs
+          uri: lb://messaging-service
+          predicates:
+            - Path=/messaging-service/v3/api-docs/**
+          filters:
+            - StripPrefix=1
+        - id: adaptive-learning-service-docs
+          uri: lb://adaptive-learning-service
+          predicates:
+            - Path=/adaptive-learning-service/v3/api-docs/**
+          filters:
+            - StripPrefix=1
       default-filters:
         - RemoveRequestHeader=Cookie
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
@@ -61,6 +99,23 @@ eureka:
   client:
     serviceUrl:
       defaultZone: ${EUREKA_URL:http://discovery-server:8761/eureka}
+
+springdoc:
+  swagger-ui:
+    urls:
+      - name: Exam & Certification
+        url: /exam-cert-service/v3/api-docs
+      - name: Forum
+        url: /forum-service/v3/api-docs
+      - name: Courses & Resources
+        url: /course-resource-service/v3/api-docs
+      - name: Quiz
+        url: /quiz-service/v3/api-docs
+      - name: Messaging
+        url: /messaging-service/v3/api-docs
+      - name: Adaptive Learning
+        url: /adaptive-learning-service/v3/api-docs
+    use-root-path: true
 
 management:
   endpoints:

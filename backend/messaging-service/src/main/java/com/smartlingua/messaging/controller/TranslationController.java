@@ -2,6 +2,8 @@ package com.smartlingua.messaging.controller;
 
 import com.smartlingua.messaging.entity.TranslationHistory;
 import com.smartlingua.messaging.repository.TranslationHistoryRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpStatus;
@@ -22,6 +24,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/messaging/translate")
+@Tag(name = "Translation", description = "Text translation and history")
 public class TranslationController {
 
     private static final String MY_MEMORY_URL = "https://api.mymemory.translated.net/get";
@@ -34,6 +37,7 @@ public class TranslationController {
     }
 
     @GetMapping("/languages")
+    @Operation(summary = "Get supported languages")
     public ResponseEntity<List<Map<String, String>>> languages() {
         return ResponseEntity.ok(List.of(
                 Map.of("code", "en", "name", "English"), Map.of("code", "fr", "name", "French"),
@@ -48,6 +52,7 @@ public class TranslationController {
     }
 
     @GetMapping("/history")
+    @Operation(summary = "Get translation history")
     public ResponseEntity<?> history(@RequestHeader(value = "X-User-Id", required = false) Long userId) {
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Missing X-User-Id header."));
         List<TranslationHistory> rows = translationHistoryRepository.findTop20ByUserIdOrderByCreatedAtDesc(userId);
@@ -63,6 +68,7 @@ public class TranslationController {
     }
 
     @PostMapping
+    @Operation(summary = "Translate text")
     public ResponseEntity<?> translate(
             @RequestHeader(value = "X-User-Id", required = false) Long userId,
             @RequestBody TranslateRequest req) {
