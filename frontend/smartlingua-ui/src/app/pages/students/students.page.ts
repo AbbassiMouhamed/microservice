@@ -112,10 +112,13 @@ import { User, UserType } from '../../api/api.models';
   styles: [
     `
       .grid {
-        display: grid;
-        grid-template-columns: 1.6fr 1fr;
+        display: flex;
+        flex-wrap: wrap;
         gap: 16px;
-        align-items: start;
+        align-items: flex-start;
+        > * {
+          flex: 1 1 400px;
+        }
       }
       .page-header {
         display: grid;
@@ -147,7 +150,7 @@ import { User, UserType } from '../../api/api.models';
       }
       @media (max-width: 900px) {
         .grid {
-          grid-template-columns: 1fr;
+          flex-direction: column;
         }
       }
     `,

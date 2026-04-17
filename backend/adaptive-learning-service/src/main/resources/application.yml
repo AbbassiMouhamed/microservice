@@ -1,0 +1,68 @@
+server:
+  port: ${SERVER_PORT:8086}
+
+spring:
+  application:
+    name: adaptive-learning-service
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/smartlingua?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${DB_USERNAME:smartlingua}
+    password: ${DB_PASSWORD:smartlingua}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    table: flyway_schema_history_adaptive
+    locations: classpath:db/migration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/smartlingua}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:}
+  data:
+    rest:
+      detection-strategy: annotated
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:sk-placeholder}
+      chat:
+        options:
+          model: gpt-4o-mini
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URL:http://discovery-server:8761/eureka}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost}
+
+adaptive:
+  ai:
+    enabled: ${ADAPTIVE_AI_ENABLED:false}
+  security:
+    relaxed-student-check: true
+  scheduler:
+    difficulty:
+      enabled: true
+      cron: "0 */10 * * * *"
+    recommendation:
+      enabled: true
+      cron: "0 15 * * * *"
+    simple-progress:
+      enabled: true
+      cron: "0 25 * * * *"

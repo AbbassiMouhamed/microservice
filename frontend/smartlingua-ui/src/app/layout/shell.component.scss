@@ -1,0 +1,201 @@
+$sidenav-width: 270px;
+$toolbar-height: 64px;
+$primary-color: #1565c0;
+$primary-dark: #0d47a1;
+$surface-color: #fafbff;
+$sidenav-bg: #ffffff;
+
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.shell-container {
+  height: 100vh;
+  width: 100%;
+}
+
+// ─── Sidenav ────────────────────────────────────
+.shell-sidenav {
+  width: $sidenav-width;
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
+  background: $sidenav-bg;
+  display: flex;
+  flex-direction: column;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 20px 16px;
+
+  .brand-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: $primary-color;
+  }
+
+  .brand-text {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a2e;
+    letter-spacing: -0.3px;
+  }
+}
+
+.nav-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.nav-group {
+  margin-bottom: 4px;
+}
+
+.nav-group-label {
+  padding: 12px 20px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.nav-item {
+  margin: 1px 8px;
+  border-radius: 12px !important;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(21, 101, 192, 0.06) !important;
+  }
+
+  mat-icon {
+    color: rgba(0, 0, 0, 0.55);
+    margin-right: 4px;
+  }
+}
+
+.active-link {
+  background: rgba(21, 101, 192, 0.1) !important;
+  color: $primary-color !important;
+
+  mat-icon {
+    color: $primary-color !important;
+  }
+}
+
+.nav-badge {
+  background: #ef5350;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  margin-left: auto;
+}
+
+// ─── Sidenav Footer ────────────────────────────
+.sidenav-footer {
+  margin-top: auto;
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $primary-color, #7c4dff);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a2e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.45);
+  text-transform: capitalize;
+}
+
+// ─── Toolbar ────────────────────────────────────
+.shell-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: white;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  height: $toolbar-height;
+}
+
+.toolbar-title {
+  font-size: 18px;
+  font-weight: 500;
+  margin-left: 8px;
+  color: #1a1a2e;
+}
+
+.toolbar-spacer {
+  flex: 1;
+}
+
+// ─── Content ────────────────────────────────────
+.shell-content {
+  background: $surface-color;
+}
+
+.page-content {
+  padding: 24px 32px;
+
+  @media (max-width: 600px) {
+    padding: 16px;
+  }
+}
+
+// ─── User Menu ──────────────────────────────────
+.menu-header {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong {
+    font-size: 14px;
+  }
+
+  small {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+}

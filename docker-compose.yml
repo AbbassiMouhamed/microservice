@@ -86,6 +86,116 @@ services:
     depends_on:
       - api-gateway
 
+  forum-service:
+    build:
+      context: .
+      dockerfile: backend/forum-service/Dockerfile
+    environment:
+      EUREKA_URL: http://discovery-server:8761/eureka
+      SERVER_PORT: 8082
+      DB_URL: jdbc:mysql://mysql:3306/smartlingua?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USERNAME: smartlingua
+      DB_PASSWORD: smartlingua
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/smartlingua
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/smartlingua/protocol/openid-connect/certs
+    ports:
+      - "8082:8082"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+      keycloak:
+        condition: service_started
+
+  course-resource-service:
+    build:
+      context: .
+      dockerfile: backend/course-resource-service/Dockerfile
+    environment:
+      EUREKA_URL: http://discovery-server:8761/eureka
+      SERVER_PORT: 8083
+      DB_URL: jdbc:mysql://mysql:3306/smartlingua?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USERNAME: smartlingua
+      DB_PASSWORD: smartlingua
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/smartlingua
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/smartlingua/protocol/openid-connect/certs
+    ports:
+      - "8083:8083"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+      keycloak:
+        condition: service_started
+
+  quiz-service:
+    build:
+      context: .
+      dockerfile: backend/quiz-service/Dockerfile
+    environment:
+      EUREKA_URL: http://discovery-server:8761/eureka
+      SERVER_PORT: 8084
+      DB_URL: jdbc:mysql://mysql:3306/smartlingua?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USERNAME: smartlingua
+      DB_PASSWORD: smartlingua
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/smartlingua
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/smartlingua/protocol/openid-connect/certs
+    ports:
+      - "8084:8084"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+      keycloak:
+        condition: service_started
+
+  messaging-service:
+    build:
+      context: .
+      dockerfile: backend/messaging-service/Dockerfile
+    environment:
+      EUREKA_URL: http://discovery-server:8761/eureka
+      SERVER_PORT: 8085
+      DB_URL: jdbc:mysql://mysql:3306/smartlingua?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USERNAME: smartlingua
+      DB_PASSWORD: smartlingua
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/smartlingua
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/smartlingua/protocol/openid-connect/certs
+    ports:
+      - "8085:8085"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+      keycloak:
+        condition: service_started
+
+  adaptive-learning-service:
+    build:
+      context: .
+      dockerfile: backend/adaptive-learning-service/Dockerfile
+    environment:
+      EUREKA_URL: http://discovery-server:8761/eureka
+      SERVER_PORT: 8086
+      DB_URL: jdbc:mysql://mysql:3306/smartlingua?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USERNAME: smartlingua
+      DB_PASSWORD: smartlingua
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/smartlingua
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/smartlingua/protocol/openid-connect/certs
+    ports:
+      - "8086:8086"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+      keycloak:
+        condition: service_started
+
 volumes:
   mysql-data-8-0:
   signing-keys:

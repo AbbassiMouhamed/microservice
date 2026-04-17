@@ -14,6 +14,11 @@
         <module>discovery-server</module>
         <module>api-gateway</module>
         <module>exam-cert-service</module>
+        <module>forum-service</module>
+        <module>course-resource-service</module>
+        <module>quiz-service</module>
+        <module>messaging-service</module>
+        <module>adaptive-learning-service</module>
     </modules>
 
     <properties>
@@ -52,6 +57,7 @@
                     <version>3.13.0</version>
                     <configuration>
                         <release>${maven.compiler.release}</release>
+                        <parameters>true</parameters>
                     </configuration>
                 </plugin>
                 <plugin>

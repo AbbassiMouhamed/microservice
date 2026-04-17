@@ -12,6 +12,26 @@ spring:
   cloud:
     gateway:
       routes:
+        - id: forum-service
+          uri: lb://forum-service
+          predicates:
+            - Path=/api/forum/**
+        - id: course-resource-service
+          uri: lb://course-resource-service
+          predicates:
+            - Path=/api/courses/**,/api/metier/**
+        - id: quiz-service
+          uri: lb://quiz-service
+          predicates:
+            - Path=/api/quiz/**
+        - id: messaging-service
+          uri: lb://messaging-service
+          predicates:
+            - Path=/api/messaging/**,/ws-messaging/**
+        - id: adaptive-learning-service
+          uri: lb://adaptive-learning-service
+          predicates:
+            - Path=/api/adaptive/**,/adaptive/me/**
         - id: exam-cert-service
           uri: lb://exam-cert-service
           predicates:
