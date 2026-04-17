@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -19,6 +19,7 @@ import { Course } from '../../api/api.models';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    RouterLink,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
@@ -28,20 +29,21 @@ import { Course } from '../../api/api.models';
     MatSnackBarModule,
   ],
   template: `
+    <a mat-button routerLink="/exams"><mat-icon>arrow_back</mat-icon> Back to Exams</a>
+
     <div class="page-header">
-      <div class="page-title">Create exam</div>
-      <div class="page-subtitle">Intended users: Teacher (static user mode)</div>
+      <h1>Create Exam</h1>
+      <p>Set up a new final exam for a course</p>
     </div>
 
-    <mat-card>
-      <mat-card-title>Create exam</mat-card-title>
+    <mat-card class="form-card">
       <mat-card-content>
         <p class="hint">
           Create a final exam for a course. You can publish it later to accept attempts.
         </p>
 
-        <form [formGroup]="form" (ngSubmit)="submit()" class="form">
-          <mat-form-field appearance="outline">
+        <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid">
+          <mat-form-field appearance="outline" class="full-width">
             <mat-label>Course</mat-label>
             <mat-select formControlName="courseId">
               @for (c of courses(); track c.id) {
@@ -50,12 +52,12 @@ import { Course } from '../../api/api.models';
             </mat-select>
           </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Title</mat-label>
-            <input matInput formControlName="title" />
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Exam Title</mat-label>
+            <input matInput formControlName="title" placeholder="e.g. Final Exam — French B1" />
           </mat-form-field>
 
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="outline" class="full-width">
             <mat-label>Scheduled at (optional)</mat-label>
             <input
               #scheduledAtInput
@@ -75,83 +77,107 @@ import { Course } from '../../api/api.models';
             </button>
           </mat-form-field>
 
-          <div class="row">
+          <div class="form-row">
             <mat-form-field appearance="outline">
               <mat-label>Duration (minutes)</mat-label>
               <input matInput type="number" formControlName="durationMinutes" />
+              <mat-icon matPrefix>timer</mat-icon>
             </mat-form-field>
 
             <mat-form-field appearance="outline">
-              <mat-label>Max score</mat-label>
+              <mat-label>Max Score</mat-label>
               <input matInput type="number" formControlName="maxScore" />
+              <mat-icon matPrefix>star</mat-icon>
             </mat-form-field>
 
             <mat-form-field appearance="outline">
-              <mat-label>Passing score</mat-label>
+              <mat-label>Passing Score</mat-label>
               <input matInput type="number" formControlName="passingScore" />
+              <mat-icon matPrefix>check_circle</mat-icon>
             </mat-form-field>
           </div>
 
-          <div class="actions">
+          <div class="form-actions">
             <button mat-button type="button" (click)="back()">Cancel</button>
             <button
-              mat-raised-button
+              mat-flat-button
               color="primary"
               type="submit"
               [disabled]="form.invalid || loading()"
             >
-              Create
+              <mat-icon>add</mat-icon> Create Exam
             </button>
           </div>
         </form>
 
-        <mat-card *ngIf="courses().length === 0" class="warn">
-          <mat-card-content>
-            No courses yet. Create one in the Courses section first.
-          </mat-card-content>
-        </mat-card>
+        <div *ngIf="courses().length === 0" class="warn-banner">
+          <mat-icon>info</mat-icon>
+          <span>No courses yet. Create one in the <strong>Courses</strong> section first.</span>
+        </div>
       </mat-card-content>
     </mat-card>
   `,
   styles: [
     `
+      .page-header {
+        margin: 16px 0 24px;
+        h1 {
+          font-size: 28px;
+          font-weight: 600;
+          margin: 0 0 4px;
+          color: #1a1a2e;
+        }
+        p {
+          margin: 0;
+          color: rgba(0, 0, 0, 0.55);
+        }
+      }
+      a[routerLink] {
+        text-decoration: none;
+      }
+      .form-card {
+        max-width: 800px;
+        border-radius: 16px !important;
+      }
       .hint {
         margin-top: 0;
+        color: rgba(0, 0, 0, 0.55);
+        margin-bottom: 20px;
       }
-      .page-header {
+      .form-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .full-width {
+        width: 100%;
+      }
+      .form-row {
         display: grid;
-        gap: 4px;
-        margin-bottom: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
       }
-      .page-title {
-        font-size: 20px;
-        font-weight: 500;
-        line-height: 28px;
-      }
-      .page-subtitle {
-        opacity: 0.8;
-      }
-      .form {
-        display: grid;
-        gap: 12px;
-      }
-      .row {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
-      }
-      .actions {
+      .form-actions {
         display: flex;
         justify-content: flex-end;
-        gap: 8px;
+        gap: 12px;
         margin-top: 8px;
       }
-      .warn {
-        margin-top: 16px;
-      }
-      @media (max-width: 900px) {
-        .row {
-          grid-template-columns: 1fr;
+      .warn-banner {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #fff3e0;
+        color: #e65100;
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-top: 20px;
+        font-size: 14px;
+        mat-icon {
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+          flex-shrink: 0;
         }
       }
     `,

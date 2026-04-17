@@ -15,35 +15,35 @@ Real-time chat with WebSocket, chatbot, translation, and video call signaling.
 
 ## API Endpoints
 
-| Method | Path                          | Description            |
-|--------|-------------------------------|------------------------|
-| GET    | `/api/messaging/conversations`| List conversations     |
-| POST   | `/api/messaging/messages`     | Send a message         |
-| GET    | `/api/messaging/messages`     | Get messages           |
-| GET    | `/api/messaging/users`        | List users             |
-| GET    | `/api/messaging/presence`     | Get presence status    |
-| POST   | `/api/messaging/invitations`  | Send invitation        |
-| POST   | `/api/messaging/chatbot`      | Chat with bot          |
-| POST   | `/api/messaging/translate`    | Translate text         |
-| POST   | `/api/messaging/block`        | Block a user           |
+| Method | Path                           | Description         |
+| ------ | ------------------------------ | ------------------- |
+| GET    | `/api/messaging/conversations` | List conversations  |
+| POST   | `/api/messaging/messages`      | Send a message      |
+| GET    | `/api/messaging/messages`      | Get messages        |
+| GET    | `/api/messaging/users`         | List users          |
+| GET    | `/api/messaging/presence`      | Get presence status |
+| POST   | `/api/messaging/invitations`   | Send invitation     |
+| POST   | `/api/messaging/chatbot`       | Chat with bot       |
+| POST   | `/api/messaging/translate`     | Translate text      |
+| POST   | `/api/messaging/block`         | Block a user        |
 
 ### WebSocket
 
 Connect to `/ws-messaging` and use STOMP:
 
-| Destination                    | Description         |
-|--------------------------------|---------------------|
-| `/app/chat.sendMessage`        | Send a message      |
-| `/app/chat.markAsRead`         | Mark as read        |
-| `/app/call.offer/{id}`         | Start a call        |
-| `/app/call.answer/{id}`        | Answer a call       |
-| `/app/call.ice-candidate/{id}` | ICE candidate       |
-| `/app/call.end/{id}`           | End a call          |
+| Destination                    | Description    |
+| ------------------------------ | -------------- |
+| `/app/chat.sendMessage`        | Send a message |
+| `/app/chat.markAsRead`         | Mark as read   |
+| `/app/call.offer/{id}`         | Start a call   |
+| `/app/call.answer/{id}`        | Answer a call  |
+| `/app/call.ice-candidate/{id}` | ICE candidate  |
+| `/app/call.end/{id}`           | End a call     |
 
 ## Port
 
 | Environment | Port |
-|-------------|------|
+| ----------- | ---- |
 | Docker      | 8085 |
 | Local       | 8085 |
 

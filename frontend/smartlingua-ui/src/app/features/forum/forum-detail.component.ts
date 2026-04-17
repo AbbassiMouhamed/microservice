@@ -5,6 +5,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormsModule } from '@angular/forms';
 
@@ -23,201 +24,342 @@ import { ForumPost, ForumComment } from '../../models';
     MatButtonModule,
     MatIconModule,
     MatDividerModule,
+    MatTooltipModule,
   ],
   template: `
-    <a mat-button routerLink="/forum"><mat-icon>arrow_back</mat-icon> Back to Forum</a>
+    <a mat-button routerLink="/forum" class="back-btn">
+      <mat-icon>arrow_back</mat-icon> Back to Forum
+    </a>
 
     @if (post()) {
+      <!-- Post card -->
       <mat-card class="post-card">
         <div class="post-header">
-          <div class="author-avatar">{{ post()!.authorName?.charAt(0)?.toUpperCase() || '?' }}</div>
+          <div class="author-avatar" [style.background]="getAvatarGradient(post()!.authorName)">
+            {{ post()!.authorName?.charAt(0)?.toUpperCase() || '?' }}
+          </div>
           <div class="post-meta">
             <span class="author-name">{{ post()!.authorName }}</span>
-            <span class="post-date">{{ post()!.createdAt | date: 'MMM d, y · h:mm a' }}</span>
+            <span class="post-date">{{ post()!.createdAt | date: 'EEEE, MMM d, y · h:mm a' }}</span>
           </div>
+          @if (post()!.category) {
+            <span class="category-badge">{{ post()!.category }}</span>
+          }
         </div>
 
         <h1 class="post-title">{{ post()!.title }}</h1>
         <div class="post-content">{{ post()!.content }}</div>
 
+        <mat-divider></mat-divider>
+
         <div class="post-actions">
-          <button mat-button (click)="toggleLike()">
+          <button
+            mat-button
+            class="action-btn"
+            [class.liked]="post()!.userLiked"
+            (click)="toggleLike()"
+            matTooltip="{{ post()!.userLiked ? 'Unlike' : 'Like' }}"
+          >
             <mat-icon>{{ post()!.userLiked ? 'thumb_up' : 'thumb_up_off_alt' }}</mat-icon>
-            {{ post()!.likesCount }}
+            <span class="action-count">{{ post()!.likesCount }}</span>
+            <span class="action-label">{{ post()!.likesCount === 1 ? 'Like' : 'Likes' }}</span>
           </button>
-          <button mat-button><mat-icon>comment</mat-icon> {{ post()!.commentsCount }}</button>
-          <button mat-button (click)="showReport.set(true)">
-            <mat-icon>flag</mat-icon> Report
+          <button mat-button class="action-btn">
+            <mat-icon>chat_bubble_outline</mat-icon>
+            <span class="action-count">{{ post()!.commentsCount }}</span>
+            <span class="action-label">{{
+              post()!.commentsCount === 1 ? 'Comment' : 'Comments'
+            }}</span>
+          </button>
+          <div class="action-spacer"></div>
+          <button mat-button class="action-btn report-btn" (click)="showReport.set(!showReport())">
+            <mat-icon>outlined_flag</mat-icon>
+            <span class="action-label">Report</span>
           </button>
         </div>
       </mat-card>
 
+      <!-- Report -->
       @if (showReport()) {
-        <mat-card class="report-card">
-          <input
+        <mat-card class="report-card" appearance="outlined">
+          <div class="report-header">
+            <mat-icon class="report-icon">flag</mat-icon>
+            <h3>Report this post</h3>
+          </div>
+          <textarea
             class="report-input"
             [(ngModel)]="reportReason"
-            placeholder="Reason for reporting..."
-          />
+            rows="3"
+            placeholder="Please describe the reason for reporting this post..."
+          ></textarea>
           <div class="report-actions">
             <button mat-button (click)="showReport.set(false)">Cancel</button>
             <button mat-flat-button color="warn" [disabled]="!reportReason" (click)="reportPost()">
-              Submit Report
+              <mat-icon>send</mat-icon> Submit Report
             </button>
           </div>
         </mat-card>
       }
 
-      <!-- Comments -->
+      <!-- Comments Section -->
       <div class="comments-section">
-        <h2>Comments</h2>
+        <div class="comments-header">
+          <h2>Discussion</h2>
+          <span class="comments-count">{{ comments().length }} comments</span>
+        </div>
 
         <!-- New comment -->
-        <div class="new-comment">
+        <mat-card class="new-comment-card" appearance="outlined">
+          <div class="new-comment-header">
+            <div class="comment-avatar mine">
+              <mat-icon>person</mat-icon>
+            </div>
+            <span class="new-comment-label">Join the discussion</span>
+          </div>
           <textarea
             class="comment-input"
             [(ngModel)]="newComment"
             rows="3"
-            placeholder="Write a comment..."
+            placeholder="Share your thoughts..."
           ></textarea>
-          <button mat-flat-button color="primary" [disabled]="!newComment" (click)="addComment()">
-            Comment
-          </button>
-        </div>
+          <div class="comment-submit">
+            <button mat-flat-button color="primary" [disabled]="!newComment" (click)="addComment()">
+              <mat-icon>send</mat-icon> Comment
+            </button>
+          </div>
+        </mat-card>
 
+        <!-- Comments list -->
         <div class="comments-list">
           @for (c of comments(); track c.id) {
             <div class="comment-item">
-              <div class="comment-header">
-                <div class="comment-avatar">
-                  {{ c.authorName?.charAt(0)?.toUpperCase() || '?' }}
-                </div>
-                <div class="comment-meta">
-                  <span class="comment-author">{{ c.authorName }}</span>
-                  <span class="comment-date">{{ c.createdAt | date: 'MMM d · h:mm a' }}</span>
-                </div>
-              </div>
-              <div class="comment-body">{{ c.content }}</div>
-
-              <!-- Nested replies -->
-              @if (c.replies && c.replies.length > 0) {
-                <div class="replies">
-                  @for (r of c.replies; track r.id) {
-                    <div class="comment-item reply">
-                      <div class="comment-header">
-                        <div class="comment-avatar small">
-                          {{ r.authorName?.charAt(0)?.toUpperCase() || '?' }}
-                        </div>
-                        <div class="comment-meta">
-                          <span class="comment-author">{{ r.authorName }}</span>
-                          <span class="comment-date">{{
-                            r.createdAt | date: 'MMM d · h:mm a'
-                          }}</span>
-                        </div>
-                      </div>
-                      <div class="comment-body">{{ r.content }}</div>
-                    </div>
-                  }
-                </div>
-              }
-
-              <button mat-button class="reply-btn" (click)="replyTo.set(c.id)">
-                <mat-icon>reply</mat-icon> Reply
-              </button>
-
-              @if (replyTo() === c.id) {
-                <div class="reply-form">
-                  <textarea
-                    class="comment-input"
-                    [(ngModel)]="replyContent"
-                    rows="2"
-                    placeholder="Write a reply..."
-                  ></textarea>
-                  <div class="reply-actions">
-                    <button mat-button (click)="replyTo.set(null)">Cancel</button>
-                    <button
-                      mat-flat-button
-                      color="primary"
-                      [disabled]="!replyContent"
-                      (click)="addReply(c.id)"
-                    >
-                      Reply
-                    </button>
+              <div class="comment-thread-line"></div>
+              <div class="comment-content-wrapper">
+                <div class="comment-header">
+                  <div class="comment-avatar" [style.background]="getAvatarGradient(c.authorName)">
+                    {{ c.authorName?.charAt(0)?.toUpperCase() || '?' }}
+                  </div>
+                  <div class="comment-meta">
+                    <span class="comment-author">{{ c.authorName }}</span>
+                    <span class="comment-date">{{ c.createdAt | date: 'MMM d · h:mm a' }}</span>
                   </div>
                 </div>
-              }
+                <div class="comment-body">{{ c.content }}</div>
+
+                <div class="comment-actions">
+                  <button
+                    mat-button
+                    class="reply-btn"
+                    (click)="replyTo.set(replyTo() === c.id ? null : c.id)"
+                  >
+                    <mat-icon>reply</mat-icon> Reply
+                  </button>
+                </div>
+
+                <!-- Reply form -->
+                @if (replyTo() === c.id) {
+                  <div class="reply-form">
+                    <textarea
+                      class="comment-input small"
+                      [(ngModel)]="replyContent"
+                      rows="2"
+                      placeholder="Write a reply to {{ c.authorName }}..."
+                    ></textarea>
+                    <div class="reply-actions">
+                      <button mat-button (click)="replyTo.set(null)">Cancel</button>
+                      <button
+                        mat-flat-button
+                        color="primary"
+                        [disabled]="!replyContent"
+                        (click)="addReply(c.id)"
+                      >
+                        Reply
+                      </button>
+                    </div>
+                  </div>
+                }
+
+                <!-- Nested replies -->
+                @if (c.replies && c.replies.length > 0) {
+                  <div class="replies">
+                    @for (r of c.replies; track r.id) {
+                      <div class="comment-item reply">
+                        <div class="comment-header">
+                          <div
+                            class="comment-avatar small"
+                            [style.background]="getAvatarGradient(r.authorName)"
+                          >
+                            {{ r.authorName?.charAt(0)?.toUpperCase() || '?' }}
+                          </div>
+                          <div class="comment-meta">
+                            <span class="comment-author">{{ r.authorName }}</span>
+                            <span class="comment-date">{{
+                              r.createdAt | date: 'MMM d · h:mm a'
+                            }}</span>
+                          </div>
+                        </div>
+                        <div class="comment-body">{{ r.content }}</div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
             </div>
           }
         </div>
+
+        @if (comments().length === 0) {
+          <div class="empty-comments">
+            <mat-icon>chat_bubble_outline</mat-icon>
+            <p>No comments yet. Be the first to respond!</p>
+          </div>
+        }
       </div>
     }
   `,
   styles: [
     `
+      .back-btn {
+        margin-bottom: 8px;
+        color: rgba(0, 0, 0, 0.6);
+        &:hover {
+          color: #1565c0;
+        }
+      }
+
+      /* Post */
       .post-card {
         border-radius: 16px !important;
-        margin-top: 12px;
+        margin-top: 8px;
+        padding: 28px 32px !important;
       }
       .post-header {
         display: flex;
         align-items: center;
-        gap: 12px;
-        margin-bottom: 16px;
+        gap: 14px;
+        margin-bottom: 20px;
       }
       .author-avatar {
-        width: 44px;
-        height: 44px;
+        width: 48px;
+        height: 48px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #1565c0, #7c4dff);
         color: white;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 600;
-        font-size: 16px;
+        font-size: 18px;
         flex-shrink: 0;
       }
       .post-meta {
         display: flex;
         flex-direction: column;
+        flex: 1;
       }
       .author-name {
-        font-weight: 500;
+        font-weight: 600;
+        font-size: 15px;
+        color: #1a1a2e;
       }
       .post-date {
         font-size: 12px;
-        color: rgba(0, 0, 0, 0.45);
+        color: rgba(0, 0, 0, 0.4);
+        margin-top: 2px;
+      }
+      .category-badge {
+        padding: 4px 14px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+        background: #e3f2fd;
+        color: #1565c0;
+        flex-shrink: 0;
       }
       .post-title {
-        font-size: 24px;
-        font-weight: 600;
-        margin: 0 0 12px;
+        font-size: 26px;
+        font-weight: 700;
+        margin: 0 0 16px;
         color: #1a1a2e;
+        line-height: 1.3;
+        letter-spacing: -0.3px;
       }
       .post-content {
         font-size: 15px;
-        line-height: 1.7;
-        color: rgba(0, 0, 0, 0.75);
+        line-height: 1.8;
+        color: rgba(0, 0, 0, 0.7);
         white-space: pre-wrap;
-      }
-      .post-actions {
-        display: flex;
-        gap: 8px;
-        margin-top: 16px;
+        margin-bottom: 20px;
       }
 
+      /* Actions */
+      .post-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding-top: 16px;
+      }
+      .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 10px !important;
+        font-size: 13px;
+        color: rgba(0, 0, 0, 0.55);
+        &.liked {
+          color: #1565c0;
+          background: rgba(21, 101, 192, 0.06);
+        }
+      }
+      .action-count {
+        font-weight: 600;
+      }
+      .action-label {
+        font-weight: 400;
+      }
+      .action-spacer {
+        flex: 1;
+      }
+      .report-btn {
+        color: rgba(0, 0, 0, 0.35);
+        &:hover {
+          color: #d32f2f;
+        }
+      }
+
+      /* Report */
       .report-card {
-        border-radius: 12px !important;
-        margin-top: 12px;
-        padding: 16px;
+        border-radius: 14px !important;
+        margin-top: 16px;
+        padding: 20px 24px !important;
+        border-color: #ffcdd2 !important;
+        background: #fff5f5 !important;
+      }
+      .report-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .report-icon {
+        color: #d32f2f;
+      }
+      .report-header h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #c62828;
       }
       .report-input {
         width: 100%;
-        border: none;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        padding: 8px 0;
-        outline: none;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        padding: 12px;
         font-size: 14px;
+        resize: vertical;
+        outline: none;
+        &:focus {
+          border-color: #d32f2f;
+        }
       }
       .report-actions {
         display: flex;
@@ -226,43 +368,97 @@ import { ForumPost, ForumComment } from '../../models';
         margin-top: 12px;
       }
 
+      /* Comments */
       .comments-section {
-        margin-top: 24px;
+        margin-top: 28px;
       }
-      .comments-section h2 {
-        font-size: 20px;
-        font-weight: 600;
-        margin: 0 0 16px;
-      }
-      .new-comment {
-        margin-bottom: 24px;
+      .comments-header {
         display: flex;
-        flex-direction: column;
-        gap: 8px;
-        align-items: flex-end;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        h2 {
+          font-size: 22px;
+          font-weight: 700;
+          margin: 0;
+          color: #1a1a2e;
+        }
+      }
+      .comments-count {
+        font-size: 13px;
+        color: rgba(0, 0, 0, 0.45);
+        background: rgba(0, 0, 0, 0.04);
+        padding: 4px 12px;
+        border-radius: 20px;
+      }
+
+      /* New comment */
+      .new-comment-card {
+        border-radius: 14px !important;
+        padding: 20px 24px !important;
+        margin-bottom: 24px;
+        border-color: #e3f2fd !important;
+      }
+      .new-comment-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+      .new-comment-label {
+        font-size: 14px;
+        font-weight: 500;
+        color: rgba(0, 0, 0, 0.5);
+      }
+      .comment-avatar.mine {
+        background: #e3f2fd;
+        color: #1565c0;
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
       }
       .comment-input {
         width: 100%;
-        border: 1px solid rgba(0, 0, 0, 0.12);
-        border-radius: 10px;
-        padding: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        padding: 14px;
         font-size: 14px;
         resize: vertical;
         outline: none;
+        line-height: 1.5;
+        background: #fafbff;
+        transition: border-color 0.2s;
         &:focus {
           border-color: #1565c0;
         }
+        &.small {
+          padding: 10px 12px;
+        }
       }
+      .comment-submit {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 10px;
+      }
+
+      /* Comment items */
       .comments-list {
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 6px;
       }
       .comment-item {
-        padding: 16px;
-        border-radius: 12px;
+        position: relative;
+        padding: 18px 20px;
+        border-radius: 14px;
         background: white;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        transition: background 0.15s;
+        &:hover {
+          background: #fafbff;
+        }
       }
       .comment-header {
         display: flex;
@@ -271,19 +467,19 @@ import { ForumPost, ForumComment } from '../../models';
         margin-bottom: 8px;
       }
       .comment-avatar {
-        width: 32px;
-        height: 32px;
+        width: 34px;
+        height: 34px;
         border-radius: 50%;
-        background: #e3f2fd;
-        color: #1565c0;
+        color: white;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 600;
         font-size: 13px;
+        flex-shrink: 0;
         &.small {
-          width: 26px;
-          height: 26px;
+          width: 28px;
+          height: 28px;
           font-size: 11px;
         }
       }
@@ -292,34 +488,46 @@ import { ForumPost, ForumComment } from '../../models';
         flex-direction: column;
       }
       .comment-author {
-        font-weight: 500;
+        font-weight: 600;
         font-size: 13px;
+        color: #1a1a2e;
       }
       .comment-date {
         font-size: 11px;
-        color: rgba(0, 0, 0, 0.4);
+        color: rgba(0, 0, 0, 0.35);
       }
       .comment-body {
         font-size: 14px;
-        line-height: 1.5;
-        color: rgba(0, 0, 0, 0.7);
+        line-height: 1.6;
+        color: rgba(0, 0, 0, 0.65);
+        margin-left: 44px;
+      }
+      .comment-actions {
+        margin-left: 44px;
+        margin-top: 6px;
       }
       .reply-btn {
-        margin-top: 8px;
         font-size: 12px;
+        color: rgba(0, 0, 0, 0.4);
+        border-radius: 8px !important;
+        &:hover {
+          color: #1565c0;
+        }
       }
       .replies {
-        margin-top: 12px;
-        margin-left: 24px;
+        margin-top: 10px;
+        margin-left: 44px;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 4px;
       }
       .reply {
-        background: rgba(0, 0, 0, 0.02);
+        background: rgba(21, 101, 192, 0.02);
+        border: 1px solid rgba(21, 101, 192, 0.06);
       }
       .reply-form {
-        margin-top: 8px;
+        margin-top: 10px;
+        margin-left: 44px;
         display: flex;
         flex-direction: column;
         gap: 8px;
@@ -328,6 +536,22 @@ import { ForumPost, ForumComment } from '../../models';
         display: flex;
         justify-content: flex-end;
         gap: 8px;
+      }
+
+      .empty-comments {
+        text-align: center;
+        padding: 40px 20px;
+        color: rgba(0, 0, 0, 0.35);
+        mat-icon {
+          font-size: 40px;
+          width: 40px;
+          height: 40px;
+          margin-bottom: 8px;
+        }
+        p {
+          margin: 0;
+          font-size: 14px;
+        }
       }
     `,
   ],
@@ -345,6 +569,19 @@ export class ForumDetailComponent implements OnInit {
   newComment = '';
   replyContent = '';
   reportReason = '';
+
+  getAvatarGradient(name?: string): string {
+    const gradients = [
+      'linear-gradient(135deg, #1565c0, #7c4dff)',
+      'linear-gradient(135deg, #00897b, #26a69a)',
+      'linear-gradient(135deg, #e65100, #ff8f00)',
+      'linear-gradient(135deg, #6a1b9a, #ab47bc)',
+      'linear-gradient(135deg, #c62828, #ef5350)',
+      'linear-gradient(135deg, #2e7d32, #66bb6a)',
+    ];
+    const hash = (name || '?').charCodeAt(0) % gradients.length;
+    return gradients[hash];
+  }
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));

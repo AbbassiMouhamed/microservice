@@ -1,11 +1,11 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApiClient } from '../../api/api-client.service';
 import { Certificate, UUID } from '../../api/api.models';
 import { AuthService } from '../../auth/auth.service';
@@ -18,166 +18,356 @@ import { AuthService } from '../../auth/auth.service';
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatTableModule,
+    MatTooltipModule,
     MatSnackBarModule,
   ],
   providers: [DatePipe],
   template: `
     <div class="page-header">
-      <div class="page-title">Certificates</div>
-      <div class="page-subtitle">
-        {{ auth.isStudent ? 'Your certificates' : 'Intended users: Teacher / Admin' }}
+      <div class="header-row">
+        <div>
+          <h1>{{ auth.isStudent ? 'My Certificates' : 'Certificates' }}</h1>
+          <p>
+            {{
+              auth.isStudent
+                ? 'Your earned certificates and credentials'
+                : 'Manage issued certificates'
+            }}
+          </p>
+        </div>
+        <button mat-stroked-button type="button" (click)="refresh()">
+          <mat-icon>refresh</mat-icon> Refresh
+        </button>
       </div>
     </div>
 
-    <mat-card>
-      <mat-card-title class="title-row">
-        <span>{{ auth.isStudent ? 'My certificates' : 'Certificates' }}</span>
-        <span class="spacer"></span>
-        <button mat-stroked-button type="button" (click)="refresh()">
-          <mat-icon>refresh</mat-icon>
-          Refresh
-        </button>
-      </mat-card-title>
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <mat-icon class="stat-icon">workspace_premium</mat-icon>
+        <div class="stat-info">
+          <span class="stat-value">{{ certificates().length }}</span>
+          <span class="stat-label">Total Certificates</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <mat-icon class="stat-icon verified">verified</mat-icon>
+        <div class="stat-info">
+          <span class="stat-value">{{ verifiedCount() }}</span>
+          <span class="stat-label">Verified</span>
+        </div>
+      </div>
+    </div>
 
-      <mat-card-content>
-        <ng-container *ngIf="auth.isStudent; else staffTable">
-          <table mat-table [dataSource]="certificates()" class="table">
-            <ng-container matColumnDef="exam">
-              <th mat-header-cell *matHeaderCellDef>Exam</th>
-              <td mat-cell *matCellDef="let c">
-                <div>{{ c.examTitle || '—' }}</div>
-                <div class="sub mono">Certificate: {{ c.id }}</div>
-              </td>
-            </ng-container>
+    <!-- Certificate Cards -->
+    <div class="cert-grid">
+      @for (c of certificates(); track c.id) {
+        <mat-card class="cert-card">
+          <div class="cert-card-header">
+            <div class="cert-icon-wrap">
+              <mat-icon>workspace_premium</mat-icon>
+            </div>
+            <div class="cert-signature" [class]="'sig-' + signatureClass(c)">
+              <mat-icon>{{ signatureIcon(c) }}</mat-icon>
+              {{ signatureStatus(c) }}
+            </div>
+          </div>
+          <mat-card-content>
+            <h3 class="cert-title">{{ c.examTitle || 'Certificate' }}</h3>
+            @if (!auth.isStudent && c.studentName) {
+              <div class="cert-student">
+                <mat-icon>person</mat-icon>
+                <span>{{ c.studentName }}</span>
+                @if (c.studentEmail) {
+                  <span class="cert-email">{{ c.studentEmail }}</span>
+                }
+              </div>
+            }
+            <div class="cert-details">
+              <div class="detail-item">
+                <span class="detail-label">Skill Level</span>
+                <span class="detail-value skill">{{ c.skillLevel || '—' }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Issued</span>
+                <span class="detail-value">{{ formatDate(c.issuedAt) }}</span>
+              </div>
+            </div>
+            <div class="cert-id">
+              <mat-icon>tag</mat-icon>
+              <span>{{ c.id }}</span>
+            </div>
+          </mat-card-content>
+          <mat-card-actions class="cert-actions">
+            @if (!auth.isStudent) {
+              <button mat-button type="button" (click)="verify(c.id)" matTooltip="Verify signature">
+                <mat-icon>verified</mat-icon> Verify
+              </button>
+            }
+            <span class="action-spacer"></span>
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              (click)="download(c)"
+              matTooltip="Download PDF"
+            >
+              <mat-icon>download</mat-icon> PDF
+            </button>
+            @if (!auth.isStudent) {
+              <button
+                mat-icon-button
+                color="warn"
+                type="button"
+                (click)="deleteCertificate(c)"
+                matTooltip="Delete certificate"
+              >
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            }
+          </mat-card-actions>
+        </mat-card>
+      }
+    </div>
 
-            <ng-container matColumnDef="issuedAt">
-              <th mat-header-cell *matHeaderCellDef>Issued</th>
-              <td mat-cell *matCellDef="let c">{{ formatDate(c.issuedAt) }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="skillLevel">
-              <th mat-header-cell *matHeaderCellDef>Skill</th>
-              <td mat-cell *matCellDef="let c">{{ c.skillLevel }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="valid">
-              <th mat-header-cell *matHeaderCellDef>Signature</th>
-              <td mat-cell *matCellDef="let c">{{ signatureStatus(c) }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let c" class="row-actions">
-                <button mat-raised-button color="primary" type="button" (click)="download(c)">
-                  <mat-icon>download</mat-icon>
-                  PDF
-                </button>
-              </td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-          </table>
-        </ng-container>
-
-        <ng-template #staffTable>
-          <table mat-table [dataSource]="certificates()" class="table">
-            <ng-container matColumnDef="exam">
-              <th mat-header-cell *matHeaderCellDef>Exam</th>
-              <td mat-cell *matCellDef="let c">
-                <div>{{ c.examTitle || '—' }}</div>
-                <div class="sub mono">Certificate: {{ c.id }}</div>
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="student">
-              <th mat-header-cell *matHeaderCellDef>Student</th>
-              <td mat-cell *matCellDef="let c">
-                <div>{{ c.studentName || '—' }}</div>
-                <div class="sub">{{ c.studentEmail || '' }}</div>
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="issuedAt">
-              <th mat-header-cell *matHeaderCellDef>Issued</th>
-              <td mat-cell *matCellDef="let c">{{ formatDate(c.issuedAt) }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="skillLevel">
-              <th mat-header-cell *matHeaderCellDef>Skill</th>
-              <td mat-cell *matCellDef="let c">{{ c.skillLevel }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="valid">
-              <th mat-header-cell *matHeaderCellDef>Signature</th>
-              <td mat-cell *matCellDef="let c">{{ signatureStatus(c) }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let c" class="row-actions">
-                <button mat-button type="button" (click)="verify(c.id)">
-                  <mat-icon>verified</mat-icon>
-                  Verify
-                </button>
-                <button mat-raised-button color="primary" type="button" (click)="download(c)">
-                  <mat-icon>download</mat-icon>
-                  PDF
-                </button>
-                <button mat-button color="warn" type="button" (click)="deleteCertificate(c)">
-                  <mat-icon>delete</mat-icon>
-                  Delete
-                </button>
-              </td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-          </table>
-        </ng-template>
-      </mat-card-content>
-    </mat-card>
+    @if (certificates().length === 0) {
+      <div class="empty-state">
+        <mat-icon>workspace_premium</mat-icon>
+        <h3>No certificates yet</h3>
+        <p>
+          {{
+            auth.isStudent
+              ? 'Pass an exam to earn your first certificate!'
+              : 'No certificates have been issued yet.'
+          }}
+        </p>
+      </div>
+    }
   `,
   styles: [
     `
-      .title-row {
+      .page-header {
+        margin-bottom: 24px;
+        h1 {
+          font-size: 28px;
+          font-weight: 600;
+          margin: 0 0 4px;
+          color: #1a1a2e;
+        }
+        p {
+          margin: 0;
+          color: rgba(0, 0, 0, 0.55);
+        }
+      }
+      .header-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .stats-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .stat-card {
+        flex: 1 1 180px;
         display: flex;
         align-items: center;
+        gap: 14px;
+        background: #fff;
+        border-radius: 16px;
+        padding: 18px 20px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
       }
-      .page-header {
-        display: grid;
+      .stat-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+        color: #1565c0;
+        &.verified {
+          color: #2e7d32;
+        }
+      }
+      .stat-info {
+        display: flex;
+        flex-direction: column;
+      }
+      .stat-value {
+        font-size: 22px;
+        font-weight: 700;
+        color: #1a1a2e;
+        line-height: 1;
+      }
+      .stat-label {
+        font-size: 12px;
+        color: rgba(0, 0, 0, 0.5);
+        margin-top: 2px;
+      }
+
+      .cert-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+      .cert-card {
+        flex: 1 1 340px;
+        border-radius: 16px !important;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+      }
+      .cert-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 20px 0;
+      }
+      .cert-icon-wrap {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #ffd54f, #ffb300);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        mat-icon {
+          color: #fff;
+          font-size: 26px;
+          width: 26px;
+          height: 26px;
+        }
+      }
+      .cert-signature {
+        display: inline-flex;
+        align-items: center;
         gap: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 20px;
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+        &.sig-valid {
+          background: #e8f5e9;
+          color: #2e7d32;
+        }
+        &.sig-invalid {
+          background: #fce4ec;
+          color: #c62828;
+        }
+        &.sig-unknown {
+          background: #f5f5f5;
+          color: #757575;
+        }
+      }
+
+      .cert-title {
+        font-size: 17px;
+        font-weight: 600;
+        margin: 0 0 10px;
+        color: #1a1a2e;
+      }
+      .cert-student {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        color: rgba(0, 0, 0, 0.7);
+        margin-bottom: 12px;
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+          color: rgba(0, 0, 0, 0.4);
+        }
+      }
+      .cert-email {
+        color: rgba(0, 0, 0, 0.45);
+        font-size: 13px;
+        &::before {
+          content: '·';
+          margin: 0 4px;
+        }
+      }
+      .cert-details {
+        display: flex;
+        gap: 16px;
+        background: #fafbff;
+        border-radius: 10px;
+        padding: 12px 16px;
         margin-bottom: 12px;
       }
-      .page-title {
-        font-size: 20px;
-        font-weight: 500;
-        line-height: 28px;
+      .detail-item {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
       }
-      .page-subtitle {
-        opacity: 0.8;
+      .detail-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        color: rgba(0, 0, 0, 0.45);
       }
-      .spacer {
+      .detail-value {
+        font-size: 15px;
+        font-weight: 600;
+        color: #1a1a2e;
+        &.skill {
+          color: #1565c0;
+        }
+      }
+      .cert-id {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 11px;
+        color: rgba(0, 0, 0, 0.35);
+        overflow-wrap: anywhere;
+        mat-icon {
+          font-size: 14px;
+          width: 14px;
+          height: 14px;
+        }
+      }
+      .cert-actions {
+        display: flex;
+        align-items: center;
+        padding: 4px 8px !important;
+        gap: 4px;
+      }
+      .action-spacer {
         flex: 1 1 auto;
       }
-      .table {
-        width: 100%;
-      }
-      .row-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 8px;
-      }
-      .mono {
-        font-family:
-          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
-          monospace;
-        font-size: 12px;
-        overflow-wrap: anywhere;
-      }
-      .sub {
-        opacity: 0.75;
+
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        mat-icon {
+          font-size: 64px;
+          width: 64px;
+          height: 64px;
+          color: rgba(0, 0, 0, 0.15);
+        }
+        h3 {
+          margin: 16px 0 8px;
+          color: #1a1a2e;
+        }
+        p {
+          color: rgba(0, 0, 0, 0.5);
+          margin-bottom: 20px;
+        }
       }
     `,
   ],
@@ -193,9 +383,13 @@ export class CertificatesPage {
   readonly certificates = signal<Certificate[]>([]);
   readonly validity = signal<Record<UUID, string>>({});
 
-  readonly displayedColumns = this.auth.isStudent
-    ? ['exam', 'issuedAt', 'skillLevel', 'valid', 'actions']
-    : ['exam', 'student', 'issuedAt', 'skillLevel', 'valid', 'actions'];
+  readonly verifiedCount = computed(
+    () =>
+      this.certificates().filter((c) => {
+        const v = this.validity()[c.id];
+        return v === 'Valid' || (c.lastVerifiedValid === true && !v);
+      }).length,
+  );
 
   constructor() {
     this.refresh();
@@ -223,7 +417,21 @@ export class CertificatesPage {
       return c.lastVerifiedValid ? 'Valid' : 'Invalid';
     }
 
-    return '-';
+    return 'Unknown';
+  }
+
+  signatureClass(c: Certificate): string {
+    const status = this.signatureStatus(c);
+    if (status === 'Valid') return 'valid';
+    if (status === 'Invalid') return 'invalid';
+    return 'unknown';
+  }
+
+  signatureIcon(c: Certificate): string {
+    const status = this.signatureStatus(c);
+    if (status === 'Valid') return 'verified';
+    if (status === 'Invalid') return 'error_outline';
+    return 'help_outline';
   }
 
   verify(id: UUID): void {

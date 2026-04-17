@@ -191,11 +191,13 @@ public class AdaptiveLearningFacadeService {
 
     @Transactional(readOnly = true)
     public LearningPathView getLatestLearningPath(Long studentId) {
-        LearningPath path = pathRepo.findFirstByStudentIdOrderByCreatedAtDesc(studentId)
-                .orElseThrow(() -> new NotFoundException("No learning path found for student " + studentId));
-        List<LearningPathItem> items = pathItemRepo.findByLearningPath_IdOrderByRecommendedOrderAsc(path.getId());
-        path.setItems(items);
-        return toLearningPathView(path);
+        return pathRepo.findFirstByStudentIdOrderByCreatedAtDesc(studentId)
+                .map(path -> {
+                    List<LearningPathItem> items = pathItemRepo.findByLearningPath_IdOrderByRecommendedOrderAsc(path.getId());
+                    path.setItems(items);
+                    return toLearningPathView(path);
+                })
+                .orElse(null);
     }
 
     @Transactional
@@ -323,10 +325,14 @@ public class AdaptiveLearningFacadeService {
     // PROFILE
     // ============================================================
 
-    @Transactional(readOnly = true)
+    @Transactional
     public ProfileView getProfile(Long studentId) {
         StudentLearningProfile profile = profileRepo.findByStudentId(studentId)
-                .orElseThrow(() -> new NotFoundException("Profile not found for student " + studentId));
+                .orElseGet(() -> {
+                    StudentLearningProfile p = new StudentLearningProfile();
+                    p.setStudentId(studentId);
+                    return profileRepo.save(p);
+                });
 
         StudentGamification g = gamificationRepo.findByStudentId(studentId).orElse(null);
         int points = g != null ? g.getPoints() : 0;

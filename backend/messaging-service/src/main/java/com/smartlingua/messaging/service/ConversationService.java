@@ -34,7 +34,8 @@ public class ConversationService {
 
     public ConversationDTO getConversationBetweenUsers(Long userId1, Long userId2) {
         Conversation c = conversationRepository.findConversationBetweenUsers(userId1, userId2)
-                .orElseThrow(() -> new RuntimeException("No conversation between " + userId1 + " and " + userId2));
+                .orElse(null);
+        if (c == null) return null;
         return convertToDTO(c, userId1);
     }
 

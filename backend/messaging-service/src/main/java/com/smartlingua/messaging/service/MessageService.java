@@ -40,7 +40,7 @@ public class MessageService {
         }
         Conversation conversation = conversationRepository
                 .findConversationBetweenUsers(senderId, receiverId)
-                .orElseThrow(() -> new RuntimeException("No conversation exists. The recipient must accept your invitation first."));
+                .orElseGet(() -> conversationRepository.save(new Conversation(senderId, receiverId)));
 
         String contentToSave = content;
         boolean hadBadWord = false;
@@ -56,6 +56,22 @@ public class MessageService {
         conversation.addMessage(message);
         message = messageRepository.save(message);
         return convertToDTO(message);
+    }
+
+    public MessageDTO sendMessageToConversation(Long conversationId, Long senderId, String content) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new RuntimeException("Conversation not found"));
+
+        // Verify sender is a participant
+        if (!conversation.getParticipant1Id().equals(senderId) && !conversation.getParticipant2Id().equals(senderId)) {
+            throw new RuntimeException("User is not a participant of this conversation");
+        }
+
+        Long receiverId = conversation.getParticipant1Id().equals(senderId)
+                ? conversation.getParticipant2Id()
+                : conversation.getParticipant1Id();
+
+        return sendMessage(senderId, receiverId, content);
     }
 
     public List<MessageDTO> getConversationMessages(Long conversationId) {

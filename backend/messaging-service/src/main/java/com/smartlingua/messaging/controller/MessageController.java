@@ -1,5 +1,6 @@
 package com.smartlingua.messaging.controller;
 
+import com.smartlingua.messaging.dto.ConversationMessageRequest;
 import com.smartlingua.messaging.dto.MessageDTO;
 import com.smartlingua.messaging.dto.SendMessageRequest;
 import com.smartlingua.messaging.service.MessageService;
@@ -33,6 +34,19 @@ public class MessageController {
     @GetMapping("/conversation/{conversationId}")
     public ResponseEntity<List<MessageDTO>> getConversationMessages(@PathVariable Long conversationId) {
         return ResponseEntity.ok(messageService.getConversationMessages(conversationId));
+    }
+
+    @PostMapping("/conversation/{conversationId}")
+    public ResponseEntity<MessageDTO> sendToConversation(@PathVariable Long conversationId,
+                                                         @RequestBody ConversationMessageRequest request) {
+        try {
+            MessageDTO message = messageService.sendMessageToConversation(conversationId, request.getSenderId(), request.getContent());
+            messagingTemplate.convertAndSend("/queue/messages/" + message.getReceiverId(), message);
+            messagingTemplate.convertAndSend("/queue/messages/" + message.getSenderId(), message);
+            return ResponseEntity.status(HttpStatus.CREATED).body(message);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).header("X-Error-Message", e.getMessage()).body(null);
+        }
     }
 
     @GetMapping("/between/{userId1}/{userId2}")

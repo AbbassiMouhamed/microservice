@@ -11,19 +11,19 @@ Discussion forum for students and teachers with posts, comments, and announcemen
 
 ## API Endpoints
 
-| Method | Path                                  | Description           |
-|--------|---------------------------------------|-----------------------|
-| GET    | `/api/forum/posts`                    | List posts            |
-| POST   | `/api/forum/posts`                    | Create a post         |
-| GET    | `/api/forum/posts/{id}/comments`      | List comments         |
-| POST   | `/api/forum/posts/{id}/comments`      | Add a comment         |
-| GET    | `/api/forum/announcements`            | List announcements    |
-| GET    | `/api/forum/notifications`            | Get notifications     |
+| Method | Path                             | Description        |
+| ------ | -------------------------------- | ------------------ |
+| GET    | `/api/forum/posts`               | List posts         |
+| POST   | `/api/forum/posts`               | Create a post      |
+| GET    | `/api/forum/posts/{id}/comments` | List comments      |
+| POST   | `/api/forum/posts/{id}/comments` | Add a comment      |
+| GET    | `/api/forum/announcements`       | List announcements |
+| GET    | `/api/forum/notifications`       | Get notifications  |
 
 ## Port
 
 | Environment | Port |
-|-------------|------|
+| ----------- | ---- |
 | Docker      | 8082 |
 | Local       | 8082 |
 

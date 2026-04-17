@@ -11,7 +11,7 @@ Eureka-based service registry. All backend services register here so the API Gat
 ## Port
 
 | Environment | Port |
-|-------------|------|
+| ----------- | ---- |
 | Docker      | 8761 |
 | Local       | 8761 |
 

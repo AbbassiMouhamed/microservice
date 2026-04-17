@@ -10,18 +10,18 @@ Question bank, quiz attempts, and NLP-powered text analysis.
 
 ## API Endpoints
 
-| Method | Path                  | Description              |
-|--------|-----------------------|--------------------------|
-| GET    | `/api/quiz/questions` | List questions           |
-| POST   | `/api/quiz/questions` | Create a question        |
-| GET    | `/api/quiz/attempts`  | List quiz attempts       |
-| POST   | `/api/quiz/attempts`  | Submit a quiz attempt    |
-| POST   | `/api/quiz/nlp`       | Analyze text with NLP    |
+| Method | Path                  | Description           |
+| ------ | --------------------- | --------------------- |
+| GET    | `/api/quiz/questions` | List questions        |
+| POST   | `/api/quiz/questions` | Create a question     |
+| GET    | `/api/quiz/attempts`  | List quiz attempts    |
+| POST   | `/api/quiz/attempts`  | Submit a quiz attempt |
+| POST   | `/api/quiz/nlp`       | Analyze text with NLP |
 
 ## Port
 
 | Environment | Port |
-|-------------|------|
+| ----------- | ---- |
 | Docker      | 8084 |
 | Local       | 8084 |
 

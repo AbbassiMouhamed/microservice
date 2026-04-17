@@ -614,12 +614,14 @@ export class ConversationsComponent implements OnInit {
     if (!this.newMessage.trim()) return;
 
     if (this.selectedId()) {
-      this.msgApi.sendMessageToConversation(this.selectedId()!, this.newMessage).subscribe({
-        next: (m) => {
-          this.messages.update((msgs) => [...msgs, m]);
-          this.newMessage = '';
-        },
-      });
+      this.msgApi
+        .sendMessageToConversation(this.selectedId()!, this.currentUserId, this.newMessage)
+        .subscribe({
+          next: (m) => {
+            this.messages.update((msgs) => [...msgs, m]);
+            this.newMessage = '';
+          },
+        });
     } else if (this.selectedUserId()) {
       this.msgApi
         .sendMessage(this.currentUserId, this.selectedUserId()!, this.newMessage)
