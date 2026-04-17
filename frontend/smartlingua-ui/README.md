@@ -31,7 +31,7 @@ Open http://localhost:4200 (redirects to Keycloak login)
 ### Demo Users
 
 | Username | Password | Role    |
-|----------|----------|---------|
+| -------- | -------- | ------- |
 | admin    | admin    | ADMIN   |
 | teacher  | teacher  | TEACHER |
 | student  | student  | STUDENT |
@@ -53,6 +53,7 @@ In Docker, the build output is served by **Nginx** on port 80, with a reverse pr
 - SCSS
 - keycloak-js 26.2 (authentication)
 - Vitest (testing)
+
 # SmartLingua UI (Angular)
 
 Student-facing UI for the SmartLingua Task 4 demo.

@@ -11,19 +11,19 @@ Manages courses, chapters, sessions, and learning resources.
 
 ## API Endpoints
 
-| Method | Path                                   | Description          |
-|--------|----------------------------------------|----------------------|
-| GET    | `/api/courses`                         | List courses         |
-| POST   | `/api/courses`                         | Create a course      |
-| GET    | `/api/courses/{id}/chapters`           | List chapters        |
-| GET    | `/api/courses/{id}/seances`            | List sessions        |
-| GET    | `/api/courses/{id}/resources`          | List resources       |
-| GET    | `/api/metier`                          | List professions     |
+| Method | Path                          | Description      |
+| ------ | ----------------------------- | ---------------- |
+| GET    | `/api/courses`                | List courses     |
+| POST   | `/api/courses`                | Create a course  |
+| GET    | `/api/courses/{id}/chapters`  | List chapters    |
+| GET    | `/api/courses/{id}/seances`   | List sessions    |
+| GET    | `/api/courses/{id}/resources` | List resources   |
+| GET    | `/api/metier`                 | List professions |
 
 ## Port
 
 | Environment | Port |
-|-------------|------|
+| ----------- | ---- |
 | Docker      | 8083 |
 | Local       | 8083 |
 

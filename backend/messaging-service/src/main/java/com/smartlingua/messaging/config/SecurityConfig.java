@@ -45,6 +45,7 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui", "/swagger-ui/**").permitAll()
                         .requestMatchers("/api-docs", "/api-docs/**").permitAll()
                         .requestMatchers("/ws-messaging/**").permitAll()
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/messaging/**").authenticated()
                         .anyRequest().denyAll()
                 )

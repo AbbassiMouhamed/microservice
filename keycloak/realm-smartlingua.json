@@ -3,12 +3,13 @@
   "enabled": true,
   "displayName": "SmartLingua",
   "sslRequired": "none",
-  "registrationAllowed": false,
+  "registrationAllowed": true,
   "rememberMe": true,
   "resetPasswordAllowed": true,
   "roles": {
     "realm": [{ "name": "ADMIN" }, { "name": "TEACHER" }, { "name": "STUDENT" }]
   },
+  "defaultRoles": ["STUDENT"],
   "clients": [
     {
       "clientId": "smartlingua-ui",

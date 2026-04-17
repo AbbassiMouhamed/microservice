@@ -41,7 +41,8 @@ public class AdaptiveLearningController {
     @GetMapping("/me/learning-path")
     public ResponseEntity<LearningPathView> getMyLearningPath(Authentication auth) {
         long studentId = jwtUserResolver.requireAppUserId(auth);
-        return ResponseEntity.ok(facade.getLatestLearningPath(studentId));
+        LearningPathView view = facade.getLatestLearningPath(studentId);
+        return view != null ? ResponseEntity.ok(view) : ResponseEntity.noContent().build();
     }
 
     @PutMapping("/me/learning-path/items/{itemId}/status")

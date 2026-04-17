@@ -50,8 +50,13 @@ export class MessagingApiService {
     return this.http.get<Message[]>(`${this.base}/messages/conversation/${conversationId}`);
   }
 
-  sendMessageToConversation(conversationId: number, content: string): Observable<Message> {
+  sendMessageToConversation(
+    conversationId: number,
+    senderId: number,
+    content: string,
+  ): Observable<Message> {
     return this.http.post<Message>(`${this.base}/messages/conversation/${conversationId}`, {
+      senderId,
       content,
     });
   }

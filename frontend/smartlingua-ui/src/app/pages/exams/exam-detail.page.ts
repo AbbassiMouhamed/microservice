@@ -8,8 +8,10 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApiClient } from '../../api/api-client.service';
 import { Course, Exam, ExamAttempt, User, UUID } from '../../api/api.models';
 import { AuthService } from '../../auth/auth.service';
@@ -23,7 +25,9 @@ import { AuthService } from '../../auth/auth.service';
     RouterLink,
     MatCardModule,
     MatButtonModule,
+    MatIconModule,
     MatTableModule,
+    MatTooltipModule,
     MatFormFieldModule,
     MatSelectModule,
     MatInputModule,
@@ -32,203 +36,194 @@ import { AuthService } from '../../auth/auth.service';
   providers: [DatePipe],
   template: `
     <div class="page-header">
-      <div class="page-title">Exam details</div>
-      <div class="page-subtitle">
-        {{ auth.isTeacherOrAdmin ? 'Teacher / Admin' : 'Student' }}
+      <div class="header-row">
+        <a mat-button routerLink="/exams"><mat-icon>arrow_back</mat-icon> Back to Exams</a>
       </div>
     </div>
 
-    <div class="top-actions">
-      <button mat-button type="button" (click)="back()">Back</button>
-    </div>
-
-    <mat-card *ngIf="exam() as e">
-      <mat-card-title class="title-row">
-        <span>{{ e.title }}</span>
-        <span class="spacer"></span>
-        <span class="status">{{ e.status }}</span>
-      </mat-card-title>
-
-      <mat-card-content>
-        <div class="meta">
-          <div>
-            <strong>Course</strong>
-            <div>{{ courseTitleById()(e.courseId) }}</div>
+    @if (exam(); as e) {
+      <mat-card class="detail-card">
+        <div class="detail-header">
+          <div class="detail-icon-wrap" [class]="'status-bg-' + e.status?.toLowerCase()">
+            <mat-icon>assignment</mat-icon>
           </div>
-          <div>
-            <strong>Scheduled</strong>
-            <div>{{ formatDate(e.scheduledAt) }}</div>
+          <div class="detail-title-section">
+            <h1>{{ e.title }}</h1>
+            <div class="detail-badges">
+              <span class="status-chip" [class]="'status-' + e.status?.toLowerCase()">
+                {{ e.status }}
+              </span>
+            </div>
           </div>
-          <div>
-            <strong>Duration</strong>
-            <div>{{ e.durationMinutes }} min</div>
-          </div>
-          <div>
-            <strong>Max score</strong>
-            <div>{{ e.maxScore }}</div>
-          </div>
-          <div>
-            <strong>Passing score</strong>
-            <div>{{ e.passingScore }}</div>
-          </div>
-        </div>
-
-        <div class="actions">
-          <button mat-stroked-button type="button" (click)="refresh()">Refresh</button>
-          <button
-            *ngIf="auth.isTeacherOrAdmin"
-            mat-raised-button
-            color="primary"
-            type="button"
-            (click)="publish()"
-            [disabled]="e.status === 'CLOSED'"
-          >
-            Publish
-          </button>
-          <button
-            *ngIf="auth.isTeacherOrAdmin"
-            mat-raised-button
-            color="warn"
-            type="button"
-            (click)="close()"
-            [disabled]="e.status === 'CLOSED'"
-          >
-            Close
-          </button>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <div class="grid">
-      <mat-card *ngIf="auth.isTeacherOrAdmin">
-        <mat-card-title class="title-row">
-          <span>Attempts</span>
-          <span class="spacer"></span>
-          <a mat-stroked-button [routerLink]="['/certificates']">Certificates</a>
-        </mat-card-title>
-        <mat-card-content>
-          <table mat-table [dataSource]="attempts()" class="table">
-            <ng-container matColumnDef="student">
-              <th mat-header-cell *matHeaderCellDef>Student</th>
-              <td mat-cell *matCellDef="let a">
-                {{ studentNameById()(a.studentId) }}
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="score">
-              <th mat-header-cell *matHeaderCellDef>Score</th>
-              <td mat-cell *matCellDef="let a">{{ a.score }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="skill">
-              <th mat-header-cell *matHeaderCellDef>Skill</th>
-              <td mat-cell *matCellDef="let a">{{ a.skillLevel }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="passed">
-              <th mat-header-cell *matHeaderCellDef>Passed</th>
-              <td mat-cell *matCellDef="let a">{{ a.passed ? 'Yes' : 'No' }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="submittedAt">
-              <th mat-header-cell *matHeaderCellDef>Submitted</th>
-              <td mat-cell *matCellDef="let a">{{ formatDate(a.submittedAt) }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let a" class="row-actions">
-                <button
-                  mat-raised-button
-                  color="primary"
-                  type="button"
-                  (click)="issue(a.id)"
-                  [disabled]="!a.passed"
-                >
-                  Issue
-                </button>
-                <button mat-button color="warn" type="button" (click)="deleteAttempt(a)">
-                  Delete
-                </button>
-              </td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="attemptColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: attemptColumns"></tr>
-          </table>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card *ngIf="auth.isTeacherOrAdmin; else studentAttempt">
-        <mat-card-title>Submit attempt (for a student)</mat-card-title>
-        <mat-card-content>
-          <p class="hint">Exam must be <strong>PUBLISHED</strong> to accept attempts.</p>
-
-          <mat-card *ngIf="!canSubmitAttempts()" class="warn">
-            <mat-card-content>
-              Attempts are disabled because this exam is not published. Use the
-              <strong>Publish</strong> button above, then refresh.
-            </mat-card-content>
-          </mat-card>
-
-          <form [formGroup]="form" (ngSubmit)="submitAttempt()" class="form">
-            <mat-form-field appearance="outline">
-              <mat-label>Student</mat-label>
-              <mat-select formControlName="studentId" [disabled]="!canSubmitAttempts()">
-                @for (s of students(); track s.id) {
-                  <mat-option [value]="s.id" [disabled]="attemptedStudentIds().has(s.id)">
-                    {{ s.name }} ({{ s.email }})
-                    @if (attemptedStudentIds().has(s.id)) {
-                      — already attempted
-                    }
-                  </mat-option>
-                }
-              </mat-select>
-              <mat-hint>Each student can submit only one attempt per exam.</mat-hint>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Score</mat-label>
-              <input
-                matInput
-                type="number"
-                formControlName="score"
-                [disabled]="!canSubmitAttempts()"
-              />
-              <mat-hint>Allowed range: 0 – {{ exam()?.maxScore ?? '—' }}</mat-hint>
-            </mat-form-field>
-
-            <button
-              mat-raised-button
-              color="primary"
-              type="submit"
-              [disabled]="!canSubmitAttempts() || form.invalid || loading()"
-            >
-              Submit
+          <div class="detail-actions" *ngIf="auth.isTeacherOrAdmin">
+            <button mat-stroked-button type="button" (click)="refresh()">
+              <mat-icon>refresh</mat-icon> Refresh
             </button>
-          </form>
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              (click)="publish()"
+              [disabled]="e.status === 'CLOSED'"
+            >
+              <mat-icon>publish</mat-icon> Publish
+            </button>
+            <button
+              mat-flat-button
+              color="warn"
+              type="button"
+              (click)="close()"
+              [disabled]="e.status === 'CLOSED'"
+            >
+              <mat-icon>lock</mat-icon> Close
+            </button>
+          </div>
+        </div>
 
-          <mat-card *ngIf="students().length === 0" class="warn">
-            <mat-card-content>
-              No students found. Ask an admin to create students.
-            </mat-card-content>
-          </mat-card>
-        </mat-card-content>
+        <div class="meta-cards">
+          <div class="meta-card">
+            <mat-icon>school</mat-icon>
+            <span class="meta-label">Course</span>
+            <span class="meta-value">{{ courseTitleById()(e.courseId) }}</span>
+          </div>
+          <div class="meta-card">
+            <mat-icon>event</mat-icon>
+            <span class="meta-label">Scheduled</span>
+            <span class="meta-value">{{ formatDate(e.scheduledAt) }}</span>
+          </div>
+          <div class="meta-card">
+            <mat-icon>timer</mat-icon>
+            <span class="meta-label">Duration</span>
+            <span class="meta-value">{{ e.durationMinutes }} min</span>
+          </div>
+          <div class="meta-card">
+            <mat-icon>star</mat-icon>
+            <span class="meta-label">Max Score</span>
+            <span class="meta-value">{{ e.maxScore }}</span>
+          </div>
+          <div class="meta-card">
+            <mat-icon>check_circle</mat-icon>
+            <span class="meta-label">Passing Score</span>
+            <span class="meta-value accent">{{ e.passingScore }}</span>
+          </div>
+        </div>
       </mat-card>
 
-      <ng-template #studentAttempt>
-        <mat-card>
-          <mat-card-title>Submit my attempt</mat-card-title>
+      <div class="grid">
+        <mat-card class="section-card" *ngIf="auth.isTeacherOrAdmin">
+          <div class="section-header">
+            <h2><mat-icon>people</mat-icon> Attempts</h2>
+            <a mat-stroked-button [routerLink]="['/certificates']">
+              <mat-icon>workspace_premium</mat-icon> Certificates
+            </a>
+          </div>
+          <mat-card-content>
+            @if (attempts().length === 0) {
+              <div class="empty-section">
+                <mat-icon>quiz</mat-icon>
+                <p>No attempts submitted yet</p>
+              </div>
+            } @else {
+              <table mat-table [dataSource]="attempts()" class="table">
+                <ng-container matColumnDef="student">
+                  <th mat-header-cell *matHeaderCellDef>Student</th>
+                  <td mat-cell *matCellDef="let a">
+                    {{ studentNameById()(a.studentId) }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="score">
+                  <th mat-header-cell *matHeaderCellDef>Score</th>
+                  <td mat-cell *matCellDef="let a">
+                    <span class="score-text" [class.passed]="a.passed" [class.failed]="!a.passed">
+                      {{ a.score }}
+                    </span>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="skill">
+                  <th mat-header-cell *matHeaderCellDef>Skill</th>
+                  <td mat-cell *matCellDef="let a">{{ a.skillLevel }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="passed">
+                  <th mat-header-cell *matHeaderCellDef>Result</th>
+                  <td mat-cell *matCellDef="let a">
+                    <span class="result-badge" [class.pass]="a.passed" [class.fail]="!a.passed">
+                      <mat-icon>{{ a.passed ? 'check_circle' : 'cancel' }}</mat-icon>
+                      {{ a.passed ? 'Passed' : 'Failed' }}
+                    </span>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="submittedAt">
+                  <th mat-header-cell *matHeaderCellDef>Submitted</th>
+                  <td mat-cell *matCellDef="let a">{{ formatDate(a.submittedAt) }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef></th>
+                  <td mat-cell *matCellDef="let a" class="row-actions">
+                    <button
+                      mat-flat-button
+                      color="primary"
+                      type="button"
+                      (click)="issue(a.id)"
+                      [disabled]="!a.passed"
+                      matTooltip="Issue certificate"
+                    >
+                      <mat-icon>workspace_premium</mat-icon> Issue
+                    </button>
+                    <button
+                      mat-icon-button
+                      color="warn"
+                      type="button"
+                      (click)="deleteAttempt(a)"
+                      matTooltip="Delete attempt"
+                    >
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="attemptColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: attemptColumns"></tr>
+              </table>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="section-card" *ngIf="auth.isTeacherOrAdmin; else studentAttempt">
+          <div class="section-header">
+            <h2><mat-icon>edit_note</mat-icon> Submit Attempt</h2>
+          </div>
           <mat-card-content>
             <p class="hint">Exam must be <strong>PUBLISHED</strong> to accept attempts.</p>
 
-            <mat-card *ngIf="!canSubmitAttempts()" class="warn">
-              <mat-card-content>
-                Attempts are disabled because this exam is not published.
-              </mat-card-content>
-            </mat-card>
+            <div *ngIf="!canSubmitAttempts()" class="warn-banner">
+              <mat-icon>warning</mat-icon>
+              <span
+                >Attempts are disabled — exam is not published yet. Use the
+                <strong>Publish</strong> button above.</span
+              >
+            </div>
 
-            <form [formGroup]="myForm" (ngSubmit)="submitMyAttempt()" class="form">
+            <form [formGroup]="form" (ngSubmit)="submitAttempt()" class="form">
+              <mat-form-field appearance="outline">
+                <mat-label>Student</mat-label>
+                <mat-select formControlName="studentId" [disabled]="!canSubmitAttempts()">
+                  @for (s of students(); track s.id) {
+                    <mat-option [value]="s.id" [disabled]="attemptedStudentIds().has(s.id)">
+                      {{ s.name }} ({{ s.email }})
+                      @if (attemptedStudentIds().has(s.id)) {
+                        — already attempted
+                      }
+                    </mat-option>
+                  }
+                </mat-select>
+                <mat-hint>Each student can submit only one attempt per exam.</mat-hint>
+              </mat-form-field>
+
               <mat-form-field appearance="outline">
                 <mat-label>Score</mat-label>
                 <input
@@ -241,78 +236,240 @@ import { AuthService } from '../../auth/auth.service';
               </mat-form-field>
 
               <button
-                mat-raised-button
+                mat-flat-button
                 color="primary"
                 type="submit"
-                [disabled]="!canSubmitAttempts() || myForm.invalid || loading()"
+                [disabled]="!canSubmitAttempts() || form.invalid || loading()"
               >
-                Submit
+                <mat-icon>send</mat-icon> Submit Attempt
               </button>
             </form>
 
-            <p class="hint" style="margin-top: 12px">
-              After you pass, a teacher/admin can issue your certificate.
-            </p>
+            <div *ngIf="students().length === 0" class="warn-banner" style="margin-top: 16px">
+              <mat-icon>info</mat-icon>
+              <span>No students found. Ask an admin to create students.</span>
+            </div>
           </mat-card-content>
         </mat-card>
-      </ng-template>
-    </div>
+
+        <ng-template #studentAttempt>
+          <mat-card class="section-card">
+            <div class="section-header">
+              <h2><mat-icon>edit_note</mat-icon> Submit My Attempt</h2>
+            </div>
+            <mat-card-content>
+              <p class="hint">Exam must be <strong>PUBLISHED</strong> to accept attempts.</p>
+
+              <div *ngIf="!canSubmitAttempts()" class="warn-banner">
+                <mat-icon>warning</mat-icon>
+                <span>Attempts are disabled — exam is not published.</span>
+              </div>
+
+              <form [formGroup]="myForm" (ngSubmit)="submitMyAttempt()" class="form">
+                <mat-form-field appearance="outline">
+                  <mat-label>Score</mat-label>
+                  <input
+                    matInput
+                    type="number"
+                    formControlName="score"
+                    [disabled]="!canSubmitAttempts()"
+                  />
+                  <mat-hint>Allowed range: 0 – {{ exam()?.maxScore ?? '—' }}</mat-hint>
+                </mat-form-field>
+
+                <button
+                  mat-flat-button
+                  color="primary"
+                  type="submit"
+                  [disabled]="!canSubmitAttempts() || myForm.invalid || loading()"
+                >
+                  <mat-icon>send</mat-icon> Submit
+                </button>
+              </form>
+
+              <p class="hint" style="margin-top: 12px; color: rgba(0,0,0,.5)">
+                After you pass, a teacher/admin can issue your certificate.
+              </p>
+            </mat-card-content>
+          </mat-card>
+        </ng-template>
+      </div>
+    }
   `,
   styles: [
     `
-      .top-actions {
-        margin-bottom: 12px;
-      }
       .page-header {
-        display: grid;
-        gap: 4px;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
       }
-      .page-title {
-        font-size: 20px;
-        font-weight: 500;
-        line-height: 28px;
+      .header-row a {
+        text-decoration: none;
       }
-      .page-subtitle {
-        opacity: 0.8;
+
+      .detail-card {
+        border-radius: 16px !important;
+        margin-bottom: 24px;
+        padding: 24px !important;
       }
-      .title-row {
+      .detail-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+      }
+      .detail-icon-wrap {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
         display: flex;
         align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        mat-icon {
+          color: #fff;
+          font-size: 28px;
+          width: 28px;
+          height: 28px;
+        }
+        &.status-bg-draft {
+          background: linear-gradient(135deg, #ff9800, #f57c00);
+        }
+        &.status-bg-published {
+          background: linear-gradient(135deg, #4caf50, #2e7d32);
+        }
+        &.status-bg-closed {
+          background: linear-gradient(135deg, #9e9e9e, #616161);
+        }
       }
-      .spacer {
-        flex: 1 1 auto;
+      .detail-title-section {
+        flex: 1;
+        min-width: 200px;
+        h1 {
+          font-size: 26px;
+          font-weight: 600;
+          margin: 0 0 8px;
+          color: #1a1a2e;
+        }
       }
-      .status {
-        font-weight: 500;
-      }
-      .meta {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
-      }
-      .mono {
-        font-family:
-          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
-          monospace;
-        font-size: 12px;
-        overflow-wrap: anywhere;
-      }
-      .sub {
-        opacity: 0.75;
-      }
-      .actions {
+      .detail-badges {
         display: flex;
         gap: 8px;
-        margin-top: 12px;
       }
+      .status-chip {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: 20px;
+        letter-spacing: 0.3px;
+        &.status-draft {
+          background: #fff3e0;
+          color: #e65100;
+        }
+        &.status-published {
+          background: #e8f5e9;
+          color: #2e7d32;
+        }
+        &.status-closed {
+          background: #f5f5f5;
+          color: #616161;
+        }
+      }
+      .detail-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .meta-cards {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .meta-card {
+        flex: 1 1 140px;
+        background: #fafbff;
+        border-radius: 12px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        text-align: center;
+        mat-icon {
+          font-size: 22px;
+          width: 22px;
+          height: 22px;
+          color: #1565c0;
+        }
+      }
+      .meta-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        color: rgba(0, 0, 0, 0.45);
+      }
+      .meta-value {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1a1a2e;
+        &.accent {
+          color: #1565c0;
+        }
+      }
+
       .grid {
         display: grid;
         grid-template-columns: 1.6fr 1fr;
-        gap: 16px;
-        margin-top: 16px;
+        gap: 20px;
         align-items: start;
       }
+
+      .section-card {
+        border-radius: 16px !important;
+      }
+      .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px 0;
+        flex-wrap: wrap;
+        gap: 12px;
+        h2 {
+          font-size: 18px;
+          font-weight: 600;
+          margin: 0;
+          color: #1a1a2e;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          mat-icon {
+            font-size: 22px;
+            width: 22px;
+            height: 22px;
+            color: #1565c0;
+          }
+        }
+        a {
+          text-decoration: none;
+        }
+      }
+
+      .empty-section {
+        text-align: center;
+        padding: 32px 16px;
+        mat-icon {
+          font-size: 40px;
+          width: 40px;
+          height: 40px;
+          color: rgba(0, 0, 0, 0.12);
+        }
+        p {
+          color: rgba(0, 0, 0, 0.4);
+          margin: 8px 0 0;
+        }
+      }
+
       .table {
         width: 100%;
       }
@@ -321,19 +478,67 @@ import { AuthService } from '../../auth/auth.service';
         justify-content: flex-end;
         gap: 8px;
       }
+      .score-text {
+        font-weight: 600;
+        &.passed {
+          color: #2e7d32;
+        }
+        &.failed {
+          color: #c62828;
+        }
+      }
+      .result-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 20px;
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+        &.pass {
+          background: #e8f5e9;
+          color: #2e7d32;
+        }
+        &.fail {
+          background: #fce4ec;
+          color: #c62828;
+        }
+      }
+
       .form {
         display: grid;
-        gap: 12px;
+        gap: 14px;
       }
       .hint {
         margin-top: 0;
+        font-size: 14px;
       }
-      .warn {
-        margin-top: 16px;
+      .warn-banner {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #fff3e0;
+        color: #e65100;
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        font-size: 14px;
+        mat-icon {
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+          flex-shrink: 0;
+        }
       }
+
       @media (max-width: 900px) {
-        .meta {
-          grid-template-columns: 1fr;
+        .meta-cards {
+          flex-direction: column;
         }
         .grid {
           grid-template-columns: 1fr;

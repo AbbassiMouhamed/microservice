@@ -13,24 +13,24 @@ AI-powered adaptive learning engine that personalizes the learning experience.
 
 ## API Endpoints
 
-| Method | Path                          | Description              |
-|--------|-------------------------------|--------------------------|
-| GET    | `/api/adaptive`               | Main adaptive endpoint   |
-| GET    | `/adaptive/me/profile`        | Student's own profile    |
-| GET    | `/api/adaptive/teacher`       | Teacher dashboard data   |
+| Method | Path                    | Description            |
+| ------ | ----------------------- | ---------------------- |
+| GET    | `/api/adaptive`         | Main adaptive endpoint |
+| GET    | `/adaptive/me/profile`  | Student's own profile  |
+| GET    | `/api/adaptive/teacher` | Teacher dashboard data |
 
 ## Port
 
 | Environment | Port |
-|-------------|------|
+| ----------- | ---- |
 | Docker      | 8086 |
 | Local       | 8086 |
 
 ## Environment Variables
 
-| Variable         | Description                    |
-|------------------|--------------------------------|
-| `OPENAI_API_KEY` | OpenAI API key for Spring AI   |
+| Variable         | Description                  |
+| ---------------- | ---------------------------- |
+| `OPENAI_API_KEY` | OpenAI API key for Spring AI |
 
 ## Run Locally
 

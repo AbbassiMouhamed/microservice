@@ -11,20 +11,20 @@ Manages exams, student attempts, and generates digitally signed PDF certificates
 
 ## API Endpoints
 
-| Method | Path               | Description            |
-|--------|--------------------|------------------------|
-| GET    | `/api/exams`       | List exams             |
-| POST   | `/api/exams`       | Create an exam         |
-| GET    | `/api/attempts`    | List attempts          |
-| POST   | `/api/attempts`    | Submit an attempt      |
-| GET    | `/api/certificates`| List certificates      |
-| POST   | `/api/certificates`| Issue a certificate    |
-| GET    | `/api/users`       | List users             |
+| Method | Path                | Description         |
+| ------ | ------------------- | ------------------- |
+| GET    | `/api/exams`        | List exams          |
+| POST   | `/api/exams`        | Create an exam      |
+| GET    | `/api/attempts`     | List attempts       |
+| POST   | `/api/attempts`     | Submit an attempt   |
+| GET    | `/api/certificates` | List certificates   |
+| POST   | `/api/certificates` | Issue a certificate |
+| GET    | `/api/users`        | List users          |
 
 ## Port
 
 | Environment | Port |
-|-------------|------|
+| ----------- | ---- |
 | Docker      | 8081 |
 | Local       | 8081 |
 

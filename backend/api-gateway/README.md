@@ -11,7 +11,7 @@ Single entry point for all API requests. Routes traffic to the correct backend s
 ## Routes
 
 | Path                | Target Service            |
-|---------------------|---------------------------|
+| ------------------- | ------------------------- |
 | `/api/forum/**`     | forum-service             |
 | `/api/courses/**`   | course-resource-service   |
 | `/api/metier/**`    | course-resource-service   |
@@ -24,7 +24,7 @@ Single entry point for all API requests. Routes traffic to the correct backend s
 ## Port
 
 | Environment | Port |
-|-------------|------|
+| ----------- | ---- |
 | Docker      | 8080 |
 | Local       | 8080 |
 

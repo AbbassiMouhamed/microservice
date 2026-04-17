@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/adaptive/me")
+@RequestMapping("/api/adaptive/me")
 public class AdaptiveMeAliasController {
 
     private final AdaptiveLearningFacadeService facade;

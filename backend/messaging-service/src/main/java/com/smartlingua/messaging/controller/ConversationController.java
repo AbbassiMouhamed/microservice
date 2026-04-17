@@ -26,6 +26,7 @@ public class ConversationController {
 
     @GetMapping("/between/{userId1}/{userId2}")
     public ResponseEntity<ConversationDTO> getConversationBetweenUsers(@PathVariable Long userId1, @PathVariable Long userId2) {
-        return ResponseEntity.ok(conversationService.getConversationBetweenUsers(userId1, userId2));
+        ConversationDTO dto = conversationService.getConversationBetweenUsers(userId1, userId2);
+        return dto != null ? ResponseEntity.ok(dto) : ResponseEntity.noContent().build();
     }
 }
