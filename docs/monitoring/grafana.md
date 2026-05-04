@@ -49,18 +49,18 @@ Access Grafana at **http://localhost:3000** (default credentials: `admin` / `adm
 
 Import these community dashboards from **Dashboards → Import** using the dashboard ID:
 
-| Dashboard | ID | What it shows |
-|---|---|---|
-| JVM (Micrometer) | 4701 | Heap, GC, threads, classloaders per service |
+| Dashboard              | ID   | What it shows                                   |
+| ---------------------- | ---- | ----------------------------------------------- |
+| JVM (Micrometer)       | 4701 | Heap, GC, threads, classloaders per service     |
 | Spring Boot Statistics | 6756 | HTTP request rates, error rates, response times |
-| Docker Host | 893 | Container CPU, memory, network |
-| MySQL Overview | 7362 | Queries/sec, connections, slow queries |
+| Docker Host            | 893  | Container CPU, memory, network                  |
+| MySQL Overview         | 7362 | Queries/sec, connections, slow queries          |
 
 ## Key Metrics to Monitor
 
-| Metric | PromQL | Alert threshold |
-|---|---|---|
-| HTTP error rate | `rate(http_server_requests_seconds_count{status=~"5.."}[5m])` | > 1% of requests |
-| JVM heap usage | `jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"}` | > 85% |
-| API Gateway latency p99 | `histogram_quantile(0.99, rate(http_server_requests_seconds_bucket{job="api-gateway"}[5m]))` | > 2s |
-| DB connection pool | `hikaricp_connections_active / hikaricp_connections_max` | > 90% |
+| Metric                  | PromQL                                                                                       | Alert threshold  |
+| ----------------------- | -------------------------------------------------------------------------------------------- | ---------------- |
+| HTTP error rate         | `rate(http_server_requests_seconds_count{status=~"5.."}[5m])`                                | > 1% of requests |
+| JVM heap usage          | `jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"}`                     | > 85%            |
+| API Gateway latency p99 | `histogram_quantile(0.99, rate(http_server_requests_seconds_bucket{job="api-gateway"}[5m]))` | > 2s             |
+| DB connection pool      | `hikaricp_connections_active / hikaricp_connections_max`                                     | > 90%            |

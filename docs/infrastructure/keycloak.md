@@ -17,11 +17,11 @@ The realm configuration is stored in `keycloak/realm-smartlingua.json`. It is mo
 
 ### Realm Contents
 
-| Resource | Details |
-|---|---|
-| Realm | `smartlingua` |
-| Client | `smartlingua-frontend` (public, PKCE) |
-| Roles | `ADMIN`, `TEACHER`, `STUDENT` |
+| Resource   | Details                                             |
+| ---------- | --------------------------------------------------- |
+| Realm      | `smartlingua`                                       |
+| Client     | `smartlingua-frontend` (public, PKCE)               |
+| Roles      | `ADMIN`, `TEACHER`, `STUDENT`                       |
 | Demo Users | `admin/admin`, `teacher/teacher`, `student/student` |
 
 ## How Tokens Flow
@@ -48,6 +48,7 @@ KEYCLOAK_JWK_SET_URI=http://keycloak:8080/realms/smartlingua/protocol/openid-con
 ```
 
 The split URL handles the mixed browser/container environment:
+
 - **Issuer URI** = `localhost:8180` (matches the issuer claim in tokens, since browsers log in via host port)
 - **JWK Set URI** = `keycloak:8080` (internal Docker DNS, for JWKS fetching from within the container)
 
@@ -79,17 +80,17 @@ keycloak:
 
 ## Admin Console
 
-| URL | Credentials |
-|---|---|
+| URL                         | Credentials       |
+| --------------------------- | ----------------- |
 | http://localhost:8180/admin | `admin` / `admin` |
 
 ## Useful Endpoints
 
-| Endpoint | Description |
-|---|---|
-| `GET /realms/smartlingua/.well-known/openid-configuration` | OIDC discovery document |
-| `GET /realms/smartlingua/protocol/openid-connect/certs` | JWKS (public keys for JWT validation) |
-| `POST /realms/smartlingua/protocol/openid-connect/token` | Token endpoint (grant_type=password for testing) |
+| Endpoint                                                   | Description                                      |
+| ---------------------------------------------------------- | ------------------------------------------------ |
+| `GET /realms/smartlingua/.well-known/openid-configuration` | OIDC discovery document                          |
+| `GET /realms/smartlingua/protocol/openid-connect/certs`    | JWKS (public keys for JWT validation)            |
+| `POST /realms/smartlingua/protocol/openid-connect/token`   | Token endpoint (grant_type=password for testing) |
 
 ## Exporting Realm Changes
 

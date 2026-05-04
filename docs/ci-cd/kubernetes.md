@@ -17,29 +17,29 @@ A single-file manifest that defines the full production stack using the `smartli
 
 ### Resources defined
 
-| Resource | Kind | Description |
-|---|---|---|
-| `smartlingua` | Namespace | Isolates all resources |
-| `mysql` | Deployment + Service | MySQL 8.0 database |
-| `keycloak` | Deployment + Service | Keycloak 26 identity provider |
-| `discovery-server` | Deployment + Service | Eureka service registry |
-| `config-server` | Deployment + Service | Spring Cloud Config |
-| `api-gateway` | Deployment + Service | API Gateway (NodePort 30080) |
-| `exam-cert-service` | Deployment + Service | Exam & certificate service |
-| `forum-service` | Deployment + Service | Forum service |
-| `course-resource-service` | Deployment + Service | Course & resource service |
-| `quiz-service` | Deployment + Service | Quiz service |
-| `messaging-service` | Deployment + Service | Messaging service |
-| `adaptive-learning-service` | Deployment + Service | Adaptive learning service |
-| `frontend` | Deployment + Service | Angular/Nginx frontend (NodePort 30000) |
+| Resource                    | Kind                 | Description                             |
+| --------------------------- | -------------------- | --------------------------------------- |
+| `smartlingua`               | Namespace            | Isolates all resources                  |
+| `mysql`                     | Deployment + Service | MySQL 8.0 database                      |
+| `keycloak`                  | Deployment + Service | Keycloak 26 identity provider           |
+| `discovery-server`          | Deployment + Service | Eureka service registry                 |
+| `config-server`             | Deployment + Service | Spring Cloud Config                     |
+| `api-gateway`               | Deployment + Service | API Gateway (NodePort 30080)            |
+| `exam-cert-service`         | Deployment + Service | Exam & certificate service              |
+| `forum-service`             | Deployment + Service | Forum service                           |
+| `course-resource-service`   | Deployment + Service | Course & resource service               |
+| `quiz-service`              | Deployment + Service | Quiz service                            |
+| `messaging-service`         | Deployment + Service | Messaging service                       |
+| `adaptive-learning-service` | Deployment + Service | Adaptive learning service               |
+| `frontend`                  | Deployment + Service | Angular/Nginx frontend (NodePort 30000) |
 
 ### Access Points
 
-| Service | Type | External Port |
-|---|---|---|
-| `frontend` | NodePort | 30000 |
-| `api-gateway` | NodePort | 30080 |
-| `keycloak` | NodePort | 30180 |
+| Service       | Type     | External Port |
+| ------------- | -------- | ------------- |
+| `frontend`    | NodePort | 30000         |
+| `api-gateway` | NodePort | 30080         |
+| `keycloak`    | NodePort | 30180         |
 
 ## Deploy to a Cluster
 
@@ -56,13 +56,13 @@ kubectl get svc -n smartlingua
 
 ## Differences vs Docker Compose
 
-| Aspect | Docker Compose | Kubernetes |
-|---|---|---|
-| Target | Local development | Production clusters |
-| Scaling | Manual (`--scale`) | `replicas` field, HPA |
-| Networking | Docker bridge | ClusterIP / NodePort / Ingress |
-| Config injection | `environment:` block | ConfigMap + Secret |
-| Health checks | `healthcheck:` | `livenessProbe` + `readinessProbe` |
+| Aspect           | Docker Compose       | Kubernetes                         |
+| ---------------- | -------------------- | ---------------------------------- |
+| Target           | Local development    | Production clusters                |
+| Scaling          | Manual (`--scale`)   | `replicas` field, HPA              |
+| Networking       | Docker bridge        | ClusterIP / NodePort / Ingress     |
+| Config injection | `environment:` block | ConfigMap + Secret                 |
+| Health checks    | `healthcheck:`       | `livenessProbe` + `readinessProbe` |
 
 ## Recommended Next Steps
 
