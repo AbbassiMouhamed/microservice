@@ -1,0 +1,53 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "api-gateway"
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["api-gateway:8080"]
+
+  - job_name: "config-server"
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["config-server:8888"]
+
+  - job_name: "discovery-server"
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["discovery-server:8761"]
+
+  - job_name: "exam-cert-service"
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["exam-cert-service:8081"]
+
+  - job_name: "forum-service"
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["forum-service:8082"]
+
+  - job_name: "course-resource-service"
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["course-resource-service:8083"]
+
+  - job_name: "quiz-service"
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["quiz-service:8084"]
+
+  - job_name: "messaging-service"
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["messaging-service:8085"]
+
+  - job_name: "adaptive-learning-service"
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["adaptive-learning-service:8086"]
+
+  - job_name: "cadvisor"
+    static_configs:
+      - targets: ["cadvisor:8080"]

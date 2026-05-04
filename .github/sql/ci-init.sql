@@ -1,0 +1,7 @@
+CREATE DATABASE IF NOT EXISTS smartlingua;
+CREATE DATABASE IF NOT EXISTS smartlingua_users;
+CREATE DATABASE IF NOT EXISTS smartlingua_quiz;
+CREATE DATABASE IF NOT EXISTS smartlingua_exams;
+CREATE DATABASE IF NOT EXISTS smartlingua_forum;
+CREATE DATABASE IF NOT EXISTS smartlingua_messaging;
+CREATE DATABASE IF NOT EXISTS smartlingua_privetcours;

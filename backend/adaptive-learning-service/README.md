@@ -41,8 +41,8 @@ SPRING_PROFILES_ACTIVE=local OPENAI_API_KEY=your-key mvn -pl adaptive-learning-s
 
 ## Tech
 
-- Spring Boot (Web, JPA, Security)
-- Spring AI + OpenAI (1.0.0-M6)
+- Spring Boot 3.5.3 (Web, JPA, Security, Java 25)
+- Spring AI + OpenAI (1.0.0 GA)
 - Spring Cloud OpenFeign (inter-service calls)
 - MySQL + Flyway migrations
 - Eureka Client

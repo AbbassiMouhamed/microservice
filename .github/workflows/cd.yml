@@ -1,0 +1,97 @@
+name: SmartLingua CD
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  docker-backend:
+    name: Docker Backend - ${{ matrix.service.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - name: adaptive-learning-service
+            dockerfile: backend/adaptive-learning-service/Dockerfile
+          - name: api-gateway
+            dockerfile: backend/api-gateway/Dockerfile
+          - name: config-server
+            dockerfile: backend/config-server/Dockerfile
+          - name: course-resource-service
+            dockerfile: backend/course-resource-service/Dockerfile
+          - name: discovery-server
+            dockerfile: backend/discovery-server/Dockerfile
+          - name: exam-cert-service
+            dockerfile: backend/exam-cert-service/Dockerfile
+          - name: forum-service
+            dockerfile: backend/forum-service/Dockerfile
+          - name: messaging-service
+            dockerfile: backend/messaging-service/Dockerfile
+          - name: quiz-service
+            dockerfile: backend/quiz-service/Dockerfile
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: |
+          docker build \
+            --file ${{ matrix.service.dockerfile }} \
+            --tag smartlingua/${{ matrix.service.name }}:${{ github.sha }} \
+            .
+
+  docker-frontend:
+    name: Docker Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build frontend image
+        run: |
+          docker build \
+            --file frontend/smartlingua-ui/Dockerfile \
+            --tag smartlingua/frontend:${{ github.sha }} \
+            .
+
+  deploy:
+    name: Deploy To Docker Host
+    runs-on: ubuntu-latest
+    needs: [docker-backend, docker-frontend]
+    if: ${{ secrets.DEPLOY_HOST != '' && secrets.DEPLOY_USER != '' && secrets.DEPLOY_SSH_KEY != '' && secrets.DEPLOY_PATH != '' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Package repository for deployment
+        run: git archive --format=tar.gz --output smartlingua-release.tgz HEAD
+
+      - name: Upload release archive
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || '22' }}
+          source: smartlingua-release.tgz
+          target: ${{ secrets.DEPLOY_PATH }}
+
+      - name: Run remote deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || '22' }}
+          script: |
+            set -e
+            mkdir -p "${{ secrets.DEPLOY_PATH }}"
+            tar -xzf "${{ secrets.DEPLOY_PATH }}/smartlingua-release.tgz" -C "${{ secrets.DEPLOY_PATH }}"
+            cd "${{ secrets.DEPLOY_PATH }}"
+            docker compose up -d --build --remove-orphans

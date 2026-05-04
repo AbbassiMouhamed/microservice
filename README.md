@@ -28,7 +28,7 @@ A microservices-based language learning platform built with **Spring Boot** and 
 | Layer       | Technology                         |
 | ----------- | ---------------------------------- |
 | Frontend    | Angular 21, Angular Material, SCSS |
-| Backend     | Spring Boot 3.4.4, Java 17         |
+| Backend     | Spring Boot 3.5.3, Java 25         |
 | API Gateway | Spring Cloud Gateway (reactive)    |
 | Discovery   | Netflix Eureka                     |
 | Auth        | Keycloak 26.1 (OAuth2 / JWT)       |
@@ -80,21 +80,39 @@ Wait until all services are healthy, then open:
 
 ```
 microservice/
+├── .github/
+│   ├── sql/ci-init.sql       (CI database bootstrap)
+│   └── workflows/
+│       ├── ci.yml            (build + test + SonarQube)
+│       └── cd.yml            (Docker build + deploy)
 ├── backend/
 │   ├── adaptive-learning-service/
 │   ├── api-gateway/
+│   ├── config-server/
 │   ├── course-resource-service/
 │   ├── discovery-server/
 │   ├── exam-cert-service/
 │   ├── forum-service/
 │   ├── messaging-service/
 │   ├── quiz-service/
-│   └── pom.xml              (parent POM)
+│   └── pom.xml              (parent POM — Java 25, Spring Boot 3.5.3)
+├── docs/
+│   ├── ci-cd/                (GitHub Actions, Docker, Compose, SonarQube, K8s)
+│   ├── infrastructure/       (Keycloak, Spring Cloud)
+│   └── monitoring/           (Prometheus, Grafana)
 ├── frontend/
 │   └── smartlingua-ui/       (Angular app)
-├── keycloak/                 (realm config)
+├── k8s/
+│   └── smartlingua-stack.yaml  (Kubernetes manifests)
+├── keycloak/
+│   └── realm-smartlingua.json  (auto-imported realm)
+├── monitoring/
+│   ├── prometheus.yml
+│   └── grafana/provisioning/
 └── docker-compose.yml
 ```
+
+> Full documentation: [docs/README.md](docs/README.md)
 
 ## Local Development
 
