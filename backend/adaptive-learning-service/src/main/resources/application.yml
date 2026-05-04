@@ -10,16 +10,17 @@ spring:
     config:
       enabled: true
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/smartlingua?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    url: ${DB_URL:jdbc:mysql://mysql:3306/smartlingua?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
     username: ${DB_USERNAME:smartlingua}
     password: ${DB_PASSWORD:smartlingua}
-    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+        jdbc:
+          time_zone: UTC
+    open-in-view: false
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -30,17 +31,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/smartlingua}
-          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:}
-  data:
-    rest:
-      detection-strategy: annotated
-  ai:
-    openai:
-      api-key: ${OPENAI_API_KEY:sk-placeholder}
-      chat:
-        options:
-          model: gpt-4o-mini
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/smartlingua}
 
 eureka:
   client:
@@ -51,7 +42,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,refresh
+        include: health,info,prometheus,refresh
 
 springdoc:
   api-docs:
