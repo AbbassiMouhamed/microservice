@@ -32,9 +32,9 @@ public class CourseController {
     }
 
     @GetMapping
-    @Operation(summary = "List all courses")
+    @Operation(summary = "List all courses (synced from course-resource-service)")
     public List<CourseResponse> list() {
-        return courseService.list().stream().map(CourseResponse::from).toList();
+        return courseService.syncAndList().stream().map(CourseResponse::from).toList();
     }
 
     @GetMapping("/{id}")

@@ -1,5 +1,6 @@
 package com.smartlingua.examcert.config;
 
+import feign.RequestInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -7,13 +8,16 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -61,8 +65,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/users", "/api/users/**").hasAnyRole("TEACHER", "ADMIN")
 
                         // teacher/admin
-                        .requestMatchers(HttpMethod.POST, "/api/courses").hasAnyRole("TEACHER", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/courses/**").hasAnyRole("TEACHER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/exams/courses").hasAnyRole("TEACHER", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/exams/courses/**").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers("/api/attempts/**").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers("/api/exams/*/attempts").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/exams/**").hasAnyRole("TEACHER", "ADMIN")
@@ -113,5 +117,18 @@ public class SecurityConfig {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
         return converter;
+    }
+
+    /**
+     * Forwards the caller's Bearer token to downstream Feign clients (e.g. course-resource-service).
+     */
+    @Bean
+    RequestInterceptor jwtForwardingInterceptor() {
+        return template -> {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth instanceof JwtAuthenticationToken jwtAuth) {
+                template.header("Authorization", "Bearer " + jwtAuth.getToken().getTokenValue());
+            }
+        };
     }
 }
