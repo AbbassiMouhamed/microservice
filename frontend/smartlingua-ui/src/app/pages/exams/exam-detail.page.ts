@@ -13,7 +13,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApiClient } from '../../api/api-client.service';
-import { Course, Exam, ExamAttempt, User, UUID } from '../../api/api.models';
+import { Exam, ExamAttempt, User, UUID } from '../../api/api.models';
 import { AuthService } from '../../auth/auth.service';
 
 @Component({
@@ -84,7 +84,7 @@ import { AuthService } from '../../auth/auth.service';
           <div class="meta-card">
             <mat-icon>school</mat-icon>
             <span class="meta-label">Course</span>
-            <span class="meta-value">{{ courseTitleById()(e.courseId) }}</span>
+            <span class="meta-value">{{ e.courseTitle }}</span>
           </div>
           <div class="meta-card">
             <mat-icon>event</mat-icon>
@@ -561,7 +561,6 @@ export class ExamDetailPage {
   readonly exam = signal<Exam | null>(null);
   readonly attempts = signal<ExamAttempt[]>([]);
   readonly students = signal<User[]>([]);
-  readonly courses = signal<Course[]>([]);
   readonly loading = signal(false);
 
   readonly canSubmitAttempts = computed(() => this.exam()?.status === 'PUBLISHED');
@@ -582,14 +581,6 @@ export class ExamDetailPage {
       map.set(s.id, s.name);
     }
     return (id: UUID) => map.get(id) ?? 'Unknown student';
-  });
-
-  readonly courseTitleById = computed(() => {
-    const map = new Map<UUID, string>();
-    for (const c of this.courses()) {
-      map.set(c.id, c.title);
-    }
-    return (id: UUID) => map.get(id) ?? 'Unknown course';
   });
 
   readonly form = this.fb.group({
@@ -617,14 +608,6 @@ export class ExamDetailPage {
   refresh(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) return;
-
-    this.api
-      .listCourses()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (data) => this.courses.set(data),
-        error: () => this.snack.open('Failed to load courses', 'Dismiss', { duration: 4000 }),
-      });
 
     this.api
       .getExam(id)

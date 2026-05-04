@@ -14,6 +14,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.ByteBuffer;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -53,8 +54,15 @@ public class ExamService {
 
     @Transactional
     public ExamEntity createExam(CreateExamCommand cmd) {
-        CourseEntity course = courseRepository.findById(cmd.courseId())
-                .orElseThrow(() -> new NotFoundException("Course not found"));
+        UUID stableId = stableUuidFromLong(cmd.externalCourseId());
+        CourseEntity course = courseRepository.findById(stableId)
+                .orElseGet(() -> courseRepository.save(
+                        CourseEntity.builder()
+                                .id(stableId)
+                                .title(cmd.courseTitle())
+                                .level(cmd.courseLevel())
+                                .build()
+                ));
 
         if (cmd.durationMinutes() <= 0) {
             throw new BadRequestException("durationMinutes must be > 0");
@@ -166,13 +174,21 @@ public class ExamService {
     }
 
     public record CreateExamCommand(
-            UUID courseId,
+            Long externalCourseId,
+            String courseTitle,
+            String courseLevel,
             String title,
             OffsetDateTime scheduledAt,
             int durationMinutes,
             int maxScore,
             int passingScore
     ) {
+    }
+
+    private static UUID stableUuidFromLong(long id) {
+        ByteBuffer buf = ByteBuffer.allocate(8);
+        buf.putLong(id);
+        return UUID.nameUUIDFromBytes(buf.array());
     }
 
     public record SubmitAttemptCommand(

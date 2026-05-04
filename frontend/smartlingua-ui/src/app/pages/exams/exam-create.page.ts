@@ -227,9 +227,12 @@ export class ExamCreatePage {
     this.loading.set(true);
 
     const v = this.form.getRawValue();
+    const selectedCourse = this.courses().find((c) => c.id === Number(v.courseId));
     this.api
       .createExam({
-        courseId: String(v.courseId),
+        externalCourseId: Number(v.courseId),
+        courseTitle: selectedCourse?.title ?? '',
+        courseLevel: selectedCourse?.level ?? null,
         title: v.title ?? '',
         scheduledAt: v.scheduledAt ? new Date(v.scheduledAt).toISOString() : null,
         durationMinutes: Number(v.durationMinutes),

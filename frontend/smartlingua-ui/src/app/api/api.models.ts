@@ -5,7 +5,7 @@ export type ExamStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED';
 export type SkillLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 
 export interface Course {
-  id: UUID;
+  id: number;
   title: string;
   level: string | null;
   startDate: string | null;
@@ -21,6 +21,7 @@ export interface User {
 export interface Exam {
   id: UUID;
   courseId: UUID;
+  courseTitle: string;
   title: string;
   scheduledAt: string | null;
   durationMinutes: number;

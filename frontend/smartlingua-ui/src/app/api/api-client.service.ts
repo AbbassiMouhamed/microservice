@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import {
   Certificate,
   Course,
@@ -20,7 +21,11 @@ export class ApiClient {
 
   // Courses
   listCourses(): Observable<Course[]> {
-    return this.http.get<Course[]>(`${this.baseUrl}/exams/courses`);
+    return this.http
+      .get<{ content: Course[] }>(`${this.baseUrl}/courses`, {
+        params: new HttpParams().set('page', 0).set('size', 500),
+      })
+      .pipe(map((res) => res.content));
   }
 
   createCourse(input: {
@@ -64,7 +69,9 @@ export class ApiClient {
   }
 
   createExam(input: {
-    courseId: UUID;
+    externalCourseId: number;
+    courseTitle: string;
+    courseLevel?: string | null;
     title: string;
     scheduledAt?: string | null;
     durationMinutes: number;
@@ -73,6 +80,7 @@ export class ApiClient {
   }): Observable<Exam> {
     return this.http.post<Exam>(`${this.baseUrl}/exams`, {
       ...input,
+      courseLevel: input.courseLevel ?? null,
       scheduledAt: input.scheduledAt ?? null,
     });
   }

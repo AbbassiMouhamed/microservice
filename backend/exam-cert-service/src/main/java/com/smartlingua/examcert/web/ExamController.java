@@ -59,7 +59,9 @@ public class ExamController {
     public ExamResponse create(@RequestBody @Valid CreateExamRequest req) {
         ExamEntity exam = examService.createExam(
                 new ExamService.CreateExamCommand(
-                        req.courseId(),
+                        req.externalCourseId(),
+                        req.courseTitle(),
+                        req.courseLevel(),
                         req.title(),
                         req.scheduledAt(),
                         req.durationMinutes(),
@@ -118,7 +120,9 @@ public class ExamController {
     }
 
     public record CreateExamRequest(
-            @NotNull UUID courseId,
+            @NotNull Long externalCourseId,
+            @NotBlank String courseTitle,
+            String courseLevel,
             @NotBlank String title,
             OffsetDateTime scheduledAt,
             @Min(1) int durationMinutes,
@@ -136,6 +140,7 @@ public class ExamController {
     public record ExamResponse(
             UUID id,
             UUID courseId,
+            String courseTitle,
             String title,
             OffsetDateTime scheduledAt,
             int durationMinutes,
@@ -147,6 +152,7 @@ public class ExamController {
             return new ExamResponse(
                     e.getId(),
                     e.getCourse().getId(),
+                    e.getCourse().getTitle(),
                     e.getTitle(),
                     e.getScheduledAt(),
                     e.getDurationMinutes(),
