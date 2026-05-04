@@ -146,18 +146,6 @@ If you want to run services outside Docker:
    ```
    Open http://localhost:4200
 
-# SmartLingua (Task 4) — Exams & Certificates
-
-Small microservices project for **exam management** and **digitally signed PDF certificates**.
-
-## What’s in this repo
-
-- **frontend**: Angular UI
-- **api-gateway**: Spring Cloud Gateway (single API entry point)
-- **discovery-server**: Eureka service registry
-- **exam-cert-service**: Spring Boot service (courses, users, exams, attempts, certificates)
-- **mysql**: MySQL 8 database
-
 ## Quick start (recommended): Docker Compose
 
 Prereqs: Docker Desktop
