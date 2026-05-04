@@ -1,4 +1,4 @@
-FROM maven:3.9.9-eclipse-temurin-17 AS build
+FROM maven:3.9-eclipse-temurin-25 AS build
 WORKDIR /workspace
 
 COPY backend/pom.xml backend/pom.xml
@@ -20,7 +20,7 @@ COPY backend/discovery-server/src backend/discovery-server/src
 RUN mvn -f backend/discovery-server/pom.xml -DskipTests package
 
 
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:25-jre
 WORKDIR /app
 
 COPY --from=build /workspace/backend/discovery-server/target/*.jar /app/app.jar
